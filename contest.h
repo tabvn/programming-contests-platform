@@ -58,8 +58,50 @@ struct Contest{
     QVector<User> scoreboardUsers;
     QVector<Problem> problems;
     QVector<Submission> submissions;
+
     QSqlQuery q;
 
+
+    bool addProblem(Problem p){
+
+        if (!q.prepare("insert into problems (name, description, maxScore, timeLimit, memoryLimit) values(:name, :description, :maxScore, :timeLimit, :memoryLimit)")){
+
+            return false;
+        }
+
+        q.bindValue(":name", p.name);
+        q.bindValue(":description", p.description);
+        q.bindValue(":maxScore", p.maxScore);
+        q.bindValue(":timeLimit", p.timeLimit);
+        q.bindValue(":memoryLimit", p.memoryLimit);
+
+        if(!q.exec()){
+
+            return false;
+        }
+        this->problems.push_back(p);
+        return true;
+    }
+    QVector<Problem> getProblems(){
+
+        if(this->problems.empty()){
+            this->q.exec("select name, description, file, fileType, maxScore, timeLimit, memoryLimit from problems order by name asc");
+
+            while(this->q.next()){
+                Problem p;
+                p.name =  q.value(0).toString();
+                p.description = q.value(1).toString();
+                p.file = q.value(2).toByteArray();
+                p.fileType = q.value(3).toString();
+                p.maxScore = q.value(4).toInt();
+                p.timeLimit = q.value(5).toInt();
+                p.memoryLimit = q.value(6).toInt();
+
+                this->problems.push_back(p);
+            }
+        }
+        return this->problems;
+    }
     QVector<User> getUsers(){
 
 

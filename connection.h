@@ -28,14 +28,14 @@ static bool createConnection()
 
     QSqlQuery query;
 
-    query.exec(QLatin1String("CREATE TABLE variables (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(20) NOT NULL UNIQUE, value varchar(20))"));
+    query.exec(QLatin1String("CREATE TABLE variables (name varchar(20) primary key, value varchar(20))"));
 
     query.exec(QLatin1String("CREATE TABLE users (id PRIMARY KEY, className varchar(20), "
                              "firstname varchar(20), lastname varchar(20), email vachar(25) UNIQUE, password vachar(50), birthday INTEGER )"));
 
-    query.exec(QLatin1String("CREATE TABLE problems (name varchar(50) primary key not null, description TEXT, file BLOB, fileType varchar(50), maxScore INTEGER, timeLimit INTEGER, memoryLimit INTEGER)"));
+    query.exec(QLatin1String("CREATE TABLE problems (name varchar(50) primary key, description TEXT, file BLOB, fileType varchar(50), maxScore INTEGER, timeLimit INTEGER, memoryLimit INTEGER)"));
 
-    query.exec(QLatin1String("CREATE TABLE tests (id INTEGER PRIMARY KEY AUTOINCREMENT, problem varchar(50), strength INTEGER, input CLOB, output CLOB, "
+    query.exec(QLatin1String("CREATE TABLE tests (id INTEGER PRIMARY KEY, problem varchar(50), strength INTEGER, input CLOB, output CLOB, "
                              "FOREIGN KEY(problem) REFERENCES problems(name) ON DELETE CASCADE )"));
 
     query.exec(QLatin1String("CREATE TABLE submissions (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, "

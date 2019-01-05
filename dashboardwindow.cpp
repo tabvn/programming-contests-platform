@@ -140,11 +140,25 @@ void setupUserTableView(QSqlQuery *q, QTableWidget *table, Contest *contest){
 
 }
 
+void setupProblemListComboBox(QComboBox *box, Contest *contest){
+
+    QVector<Problem> problems = contest->getProblems();
+
+    box->clear();
+
+    for (int i = 0; i < problems.size(); i++) {
+        box->addItem(problems[i].name);
+    }
+
+    box->addItem("+ New problem");
+
+}
 
 DashboardWindow::DashboardWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::DashboardWindow)
 {
+
     ui->setupUi(this);
 
     this->ui->userTableWidget->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -158,6 +172,7 @@ DashboardWindow::DashboardWindow(QWidget *parent) :
     // setup scoreboard table
     setupScoreTableView(&q, ui->scoreTableWidget, this->contest);
     setupUserTableView(&q, ui->userTableWidget, this->contest);
+    setupProblemListComboBox(ui->problemComboBox, contest);
 
    // show first tab
     ui->tabWidget->setCurrentIndex(0);
@@ -257,7 +272,6 @@ void DashboardWindow::on_userTableWidget_itemChanged(QTableWidgetItem *item)
 {
 
 
-
     if(item->row() == this->ui->userTableWidget->currentRow()  && item->column() == this->ui->userTableWidget->currentColumn()){
 
 
@@ -295,3 +309,43 @@ void DashboardWindow::on_userTableWidget_itemChanged(QTableWidgetItem *item)
 
 }
 
+/**
+ * Handle problem changes from select box
+ * @brief DashboardWindow::on_problemComboBox_currentIndexChanged
+ * @param value
+ */
+
+void DashboardWindow::on_problemComboBox_currentIndexChanged(const QString &value)
+{
+
+    if(value == "+ New problem"){
+       bool ok;
+       QString text = QInputDialog::getText(this, tr("Add Problem"),
+                                            tr("Problem Name:"), QLineEdit::Normal,
+                                            "", &ok);
+       if (ok && !text.isEmpty()){
+           // create new problem
+           Problem p;
+           p.name = text;
+           p.maxScore = 30;
+           p.memoryLimit = 256;
+           p.timeLimit = 1;
+
+           if(!contest->addProblem(p)){
+               QMessageBox::warning(this, tr("Add problem error"), tr("Problem could not be saved."));
+               this->ui->problemComboBox->setCurrentIndex(0);
+
+           }else{
+               setupProblemListComboBox(this->ui->problemComboBox, this->contest);
+               this->ui->problemComboBox->setCurrentIndex(this->contest->problems.size() -1);
+           }
+
+       }else{
+           this->ui->problemComboBox->setCurrentIndex(0);
+       }
+
+
+    }else{
+        this->selectedProblem = value;
+    }
+}

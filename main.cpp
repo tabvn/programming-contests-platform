@@ -6,11 +6,14 @@
 int main(int argc, char *argv[])
 {
 
+
+
      QApplication a( argc, argv );
 
     if (!createConnection()){
         return EXIT_FAILURE;
     }
+
 
     DashboardWindow dash;
 

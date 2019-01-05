@@ -25,9 +25,12 @@ private slots:
     void slotCustomMenuRequested(QPoint pos);
 
 
+    void on_problemComboBox_currentIndexChanged(const QString &arg1);
+
 private:
     Ui::DashboardWindow *ui;
     Contest *contest;
+    QString selectedProblem;
 
 };
 
