@@ -150,7 +150,18 @@ void setupProblemListComboBox(QComboBox *box, Contest *contest){
         box->addItem(problems[i].name);
     }
 
+
+
     box->addItem("+ New problem");
+
+}
+
+void setupProblemDetails(Ui::DashboardWindow *ui, Problem *problem){
+    if(problem == nullptr){
+        return;
+    }
+
+    ui->problemTextField->setText(problem->name);
 
 }
 
@@ -173,6 +184,10 @@ DashboardWindow::DashboardWindow(QWidget *parent) :
     setupScoreTableView(&q, ui->scoreTableWidget, this->contest);
     setupUserTableView(&q, ui->userTableWidget, this->contest);
     setupProblemListComboBox(ui->problemComboBox, contest);
+
+
+    setupProblemDetails(ui, this->selectedProblem);
+
 
    // show first tab
     ui->tabWidget->setCurrentIndex(0);
@@ -213,8 +228,6 @@ void DashboardWindow::slotRemoveRecord()
         }
     }
 }
-
-
 
 
 DashboardWindow::~DashboardWindow()
@@ -346,6 +359,8 @@ void DashboardWindow::on_problemComboBox_currentIndexChanged(const QString &valu
 
 
     }else{
-        this->selectedProblem = value;
+
+        this->selectedProblem = this->contest->findProblemByName(value);
+        setupProblemDetails(ui, this->selectedProblem);
     }
 }

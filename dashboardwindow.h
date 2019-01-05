@@ -30,7 +30,7 @@ private slots:
 private:
     Ui::DashboardWindow *ui;
     Contest *contest;
-    QString selectedProblem;
+    Problem *selectedProblem;
 
 };
 

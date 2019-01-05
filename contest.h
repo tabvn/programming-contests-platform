@@ -62,6 +62,16 @@ struct Contest{
     QSqlQuery q;
 
 
+    Problem *findProblemByName(QString name){
+
+        for (int i = 0; i < this->problems.size(); i++) {
+
+            if(this->problems[i].name == name){
+                return &this->problems[i];
+            }
+        }
+        return nullptr;
+    }
     bool addProblem(Problem p){
 
         if (!q.prepare("insert into problems (name, description, maxScore, timeLimit, memoryLimit) values(:name, :description, :maxScore, :timeLimit, :memoryLimit)")){
