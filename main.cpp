@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
     }
 
     DashboardWindow dash;
+
     dash.show();
 
     return a.exec();

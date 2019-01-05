@@ -30,7 +30,7 @@ static bool createConnection()
     query.exec(QLatin1String("CREATE TABLE variables (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(20) NOT NULL UNIQUE, value varchar(20))"));
 
     query.exec(QLatin1String("CREATE TABLE users (id PRIMARY KEY, className varchar(20), "
-                             "firstname varchar(20), lastname varchar(20), email vachar(25) UNIQUE, password vachar(50) NOT NULL )"));
+                             "firstname varchar(20), lastname varchar(20), email vachar(25) UNIQUE, password vachar(50), birthday INTEGER )"));
 
     query.exec(QLatin1String("CREATE TABLE problems (name varchar(50) primary key not null, description TEXT, file BLOB, fileType varchar(50), maxScore INTEGER, timeLimit INTEGER, memoryLimit INTEGER)"));
 

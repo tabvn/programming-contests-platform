@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="scoreboard">
        <attribute name="title">
@@ -54,6 +54,11 @@
        <attribute name="title">
         <string>Users</string>
        </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QTableWidget" name="userTableWidget"/>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="submissions">
        <attribute name="title">

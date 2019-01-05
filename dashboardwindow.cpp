@@ -39,19 +39,19 @@ QVariant getUserProblemScore(QSqlQuery *q, QVariant userId, QString problem){
  * @brief setupScoreTableView
  * @param table
  */
-void setupScoreTableView(QTableWidget *table){
+void setupScoreTableView(QSqlQuery *q,QTableWidget *table, Contest *contest){
 
     QStringList headers = { "ID", "Name"};
     QStringList problems;
     QString problemName;
-    QSqlQuery q;
-    QVector<User> users;
+
+
     User user;
 
-    q.exec("SELECT name FROM problems");
+    q->exec("SELECT name FROM problems");
 
-    while(q.next()){
-        problemName = q.value(0).toString();
+    while(q->next()){
+        problemName = q->value(0).toString();
         headers.append(problemName);
         problems.append(problemName);
     }
@@ -60,28 +60,14 @@ void setupScoreTableView(QTableWidget *table){
 
     table->setColumnCount(headers.length());
     table->setHorizontalHeaderLabels(headers);
-    table->setRowCount(10);
-    table->setShowGrid(true);
-    table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-
-    q.exec("select u.id, u.firstname, u.lastname from users as u inner join submissions as s on s.userId = u.id");
-
 
     int column = 0;
     int score;
     QVariant userProblemScore = -1;
-
     QVariant userId;
 
-    while(q.next()){
-
-         user.id = q.value(0).toInt();
-         user.firstname = q.value(1).toString();
-         user.lastname = q.value(2).toString();
-
-         users.push_back(user);
-    }
-
+    QVector<User> users = contest->getScoreboardUsers();
+    table->setRowCount(users.size());
     for (int row = 0; row < users.size(); row++) {
 
         user = users[row];
@@ -95,7 +81,7 @@ void setupScoreTableView(QTableWidget *table){
         score = 0;
         for (int i = 0; i < problems.size(); i++) {
            problemName = problems[i];
-           userProblemScore = getUserProblemScore(&q, user.id, problemName);
+           userProblemScore = getUserProblemScore(q, user.id, problemName);
 
            if(userProblemScore.toInt() > 0){
                score += userProblemScore.toInt();
@@ -110,8 +96,43 @@ void setupScoreTableView(QTableWidget *table){
 
     }
 
+    table->setShowGrid(true);
+    table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     table->horizontalHeader()->setStretchLastSection(true);
     table->horizontalHeader()->resizeSection(1, 300);
+
+
+}
+
+
+void setupUserTableView(QSqlQuery *q, QTableWidget *table, Contest *contest){
+
+    QVector<User> users = contest->getUsers();
+    User user;
+
+
+    QStringList headers = {"ID", "Class", "First name", "Last name", "Birthday", "Email", "Password"};
+
+    table->setColumnCount(headers.size());
+    table->setHorizontalHeaderLabels(headers);
+    table->setRowCount(users.size() + 1);
+
+
+    for (int row = 0; row < users.size(); row++) {
+        user = users[row];
+        table->setItem(row, 0, new QTableWidgetItem(QString::number(user.id)));
+        table->setItem(row, 1, new QTableWidgetItem(user.className));
+        table->setItem(row, 2, new QTableWidgetItem(user.firstname));
+        table->setItem(row, 3, new QTableWidgetItem(user.lastname));
+        table->setItem(row, 4, new QTableWidgetItem(user.birthday.toString("dd/MM/yyyy")));
+        table->setItem(row, 5, new QTableWidgetItem(user.email));
+        table->setItem(row, 6, new QTableWidgetItem(user.password));
+    }
+
+
+
+    table->horizontalHeader()->setStretchLastSection(true);
+
 
 
 }
@@ -123,10 +144,15 @@ DashboardWindow::DashboardWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    QSqlQuery q;
+    this->contest = new Contest();
 
     // setup scoreboard table
-    setupScoreTableView(ui->scoreTableWidget);
+    setupScoreTableView(&q, ui->scoreTableWidget, this->contest);
+    setupUserTableView(&q, ui->userTableWidget, this->contest);
 
+   // show first tab
+    ui->tabWidget->setCurrentIndex(0);
 
 
 }

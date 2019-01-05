@@ -2,6 +2,8 @@
 #define DASHBOARDWINDOW_H
 
 #include <QMainWindow>
+#include "contest.h"
+
 namespace Ui {
 class DashboardWindow;
 }
@@ -21,6 +23,7 @@ private slots:
 
 private:
     Ui::DashboardWindow *ui;
+    Contest *contest;
 
 };
 
