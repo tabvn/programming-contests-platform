@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include "contest.h"
-
+#include <QtWidgets>
 namespace Ui {
 class DashboardWindow;
 }
@@ -20,6 +20,10 @@ private slots:
 
 
     void on_actionQuit_2_triggered();
+    void on_userTableWidget_itemChanged(QTableWidgetItem *item);
+    void slotRemoveRecord();
+    void slotCustomMenuRequested(QPoint pos);
+
 
 private:
     Ui::DashboardWindow *ui;

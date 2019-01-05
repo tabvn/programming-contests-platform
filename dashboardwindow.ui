@@ -56,7 +56,11 @@
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QTableWidget" name="userTableWidget"/>
+         <widget class="QTableWidget" name="userTableWidget">
+          <property name="contextMenuPolicy">
+           <enum>Qt::NoContextMenu</enum>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>

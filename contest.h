@@ -6,6 +6,7 @@
 #include <QVector>
 #include <QMap>
 #include <QtSql>
+#include <QMessageBox>
 
 
 struct User{
@@ -16,6 +17,9 @@ struct User{
     QString email;
     QString password;
     QDateTime birthday;
+
+
+
 };
 
 struct Test{
@@ -58,12 +62,13 @@ struct Contest{
 
     QVector<User> getUsers(){
 
-        User u;
+
         if(this->users.empty()){
 
             this->q.exec("select id, firstname, lastname, className, birthday, email, password from users order by firstname asc");
             while (q.next()) {
 
+                User u;
                 u.id = q.value(0).toInt();
                 u.firstname = q.value(1).toString();
                 u.lastname = q.value(2).toString();
@@ -100,6 +105,70 @@ struct Contest{
         }
 
         return this->scoreboardUsers;
+    }
+
+    bool addUser(User *user){
+
+        if(!user->id || user->id == 0){
+            return false;
+        }
+
+        if(!q.prepare("insert into users (id, firstname, lastname, className,birthday, email, password) values (:id, :firstname, :lastname, :className, :birthday, :email, :password)")){
+            return false;
+        }
+        q.bindValue(":id", user->id);
+        q.bindValue(":firstname", user->firstname);
+        q.bindValue(":lastname", user->lastname);
+        q.bindValue(":className", user->className);
+        q.bindValue(":birthday", user->birthday.toTime_t());
+        q.bindValue(":email", user->email);
+        q.bindValue(":password", user->password);
+
+        if(!this->q.exec()){
+            return false;
+        }
+        this->users.push_back(*user);
+        return true;
+
+    }
+
+    bool removeUser(User *user){
+
+        if(!q.prepare("delete from users where id=:id")){
+            return false;
+        }
+        q.bindValue(":id", user->id);
+        if(!q.exec()){
+            return false;
+        }
+
+
+        return true;
+    }
+
+    bool updateUser(qint64 id, User *user){
+        if(!user->id || user->id == 0 || !id || id == 0){
+            return false;
+        }
+
+        if(!q.prepare("update users set id=:newId, firstname=:firstname, lastname=:lastname, className=:className, birthday=:birthday, email=:email, password=:password where id=:id")){
+
+            return false;
+        }
+        q.bindValue(":id", id);
+        q.bindValue(":newId", user->id);
+        q.bindValue(":firstname", user->firstname);
+        q.bindValue(":lastname", user->lastname);
+        q.bindValue(":className", user->className);
+        q.bindValue(":birthday", user->birthday.toTime_t());
+        q.bindValue(":email", user->email);
+        q.bindValue(":password", user->password);
+        if(!this->q.exec()){
+
+            return false;
+        }
+
+        return true;
     }
 };
 

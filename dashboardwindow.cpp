@@ -6,6 +6,8 @@
 #include <QtSql>
 #include "contest.h"
 #include <QVector>
+#include <QMessageBox>
+#include <QSqlTableModel>
 
 /**
  *Get user score by problem
@@ -108,7 +110,7 @@ void setupScoreTableView(QSqlQuery *q,QTableWidget *table, Contest *contest){
 void setupUserTableView(QSqlQuery *q, QTableWidget *table, Contest *contest){
 
     QVector<User> users = contest->getUsers();
-    User user;
+
 
 
     QStringList headers = {"ID", "Class", "First name", "Last name", "Birthday", "Email", "Password"};
@@ -118,21 +120,22 @@ void setupUserTableView(QSqlQuery *q, QTableWidget *table, Contest *contest){
     table->setRowCount(users.size() + 1);
 
 
+
     for (int row = 0; row < users.size(); row++) {
-        user = users[row];
-        table->setItem(row, 0, new QTableWidgetItem(QString::number(user.id)));
-        table->setItem(row, 1, new QTableWidgetItem(user.className));
-        table->setItem(row, 2, new QTableWidgetItem(user.firstname));
-        table->setItem(row, 3, new QTableWidgetItem(user.lastname));
-        table->setItem(row, 4, new QTableWidgetItem(user.birthday.toString("dd/MM/yyyy")));
-        table->setItem(row, 5, new QTableWidgetItem(user.email));
-        table->setItem(row, 6, new QTableWidgetItem(user.password));
+
+        table->setItem(row, 0, new QTableWidgetItem(QString::number(users[row].id)));
+        table->setItem(row, 1, new QTableWidgetItem(users[row].className));
+        table->setItem(row, 2, new QTableWidgetItem(users[row].firstname));
+        table->setItem(row, 3, new QTableWidgetItem(users[row].lastname));
+        table->setItem(row, 4, new QTableWidgetItem(users[row].birthday.toString("dd/MM/yyyy")));
+        table->setItem(row, 5, new QTableWidgetItem(users[row].email));
+        table->setItem(row, 6, new QTableWidgetItem(users[row].password));
+
     }
 
 
 
     table->horizontalHeader()->setStretchLastSection(true);
-
 
 
 }
@@ -143,6 +146,11 @@ DashboardWindow::DashboardWindow(QWidget *parent) :
     ui(new Ui::DashboardWindow)
 {
     ui->setupUi(this);
+
+    this->ui->userTableWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->userTableWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotCustomMenuRequested(QPoint)));
+
+
 
     QSqlQuery q;
     this->contest = new Contest();
@@ -157,6 +165,43 @@ DashboardWindow::DashboardWindow(QWidget *parent) :
 
 }
 
+void DashboardWindow::slotCustomMenuRequested(QPoint pos)
+{
+
+    QMenu * menu = new QMenu(this);
+
+    QAction * deleteDevice = new QAction(trUtf8("Delete"), this);
+
+    connect(deleteDevice, SIGNAL(triggered()), this, SLOT(slotRemoveRecord())); // Handler delete records
+
+    ui->userTableWidget->selectRow(ui->userTableWidget->currentRow());
+    menu->addAction(deleteDevice);
+
+   menu->popup(ui->userTableWidget->viewport()->mapToGlobal(pos));
+
+}
+
+void DashboardWindow::slotRemoveRecord()
+{
+
+    int row = ui->userTableWidget->selectionModel()->currentIndex().row();
+
+    if(row >= 0){
+        if(row < this->contest->users.size()){
+            if (contest->removeUser(&this->contest->users[row])){
+                this->contest->users.removeAt(row);
+                ui->userTableWidget->removeRow(row);
+                QModelIndex next_index = ui->userTableWidget->model()->index(row -1, 0);
+                ui->userTableWidget->setCurrentIndex(next_index);
+            }
+
+        }
+    }
+}
+
+
+
+
 DashboardWindow::~DashboardWindow()
 {
     delete ui;
@@ -167,3 +212,86 @@ void DashboardWindow::on_actionQuit_2_triggered()
 {
    close();
 }
+
+void setUserDataByColumnIndex(User *user, int column, QString value){
+
+    switch (column) {
+    case 0: {
+        if(!value.isNull() && !value.isEmpty()){
+            user->id = value.toInt();
+        }
+
+        break;
+    }
+    case 1: {
+        user->className = value;
+        break;
+    }
+    case 2: {
+        user->firstname = value;
+        break;
+    }
+    case 3: {
+        user->lastname = value;
+        break;
+    }
+    case 4: {
+        user->birthday = QDateTime::fromString(value, "dd/MM/yyyy");
+        break;
+    }
+    case 5: {
+        user->email = value;
+        break;
+    }
+    case 6: {
+        user->password = value;
+        break;
+    }
+    default:
+        break;
+    }
+
+}
+
+void DashboardWindow::on_userTableWidget_itemChanged(QTableWidgetItem *item)
+{
+
+
+
+    if(item->row() == this->ui->userTableWidget->currentRow()  && item->column() == this->ui->userTableWidget->currentColumn()){
+
+
+        QColor color = item->textColor();
+
+        if(item->row() < this->contest->users.size()){
+            User *user = &this->contest->users[item->row()];
+            qint64 id = user->id;
+            setUserDataByColumnIndex(user, item->column(), item->text());
+
+            if (!this->contest->updateUser(id,user)){
+                setUserDataByColumnIndex(user, item->column(), "");
+                item->setData(0, "");
+
+            }else{
+                item->setTextColor(color);
+            }
+
+        }else{
+
+            User user;
+            setUserDataByColumnIndex(&user, item->column(), item->text());
+            if(this->contest->addUser(&user)){
+                this->ui->userTableWidget->setRowCount(this->contest->users.size()+1);
+            }else{
+                setUserDataByColumnIndex(&user, item->column(), "");
+                item->setData(0, "");
+            }
+        }
+
+
+    }
+
+
+
+}
+

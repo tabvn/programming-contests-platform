@@ -25,6 +25,7 @@ static bool createConnection()
             QObject::tr("Unable to establish a database connection.\n"), QMessageBox::Cancel);
         return false;
     }
+
     QSqlQuery query;
 
     query.exec(QLatin1String("CREATE TABLE variables (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(20) NOT NULL UNIQUE, value varchar(20))"));
@@ -41,8 +42,6 @@ static bool createConnection()
                              "problem vachar(50), code CLOB, score INTEGER, accepted INTEGER, error TEXT , status varchar(20), created INTEGER, "
                              "FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE, FOREIGN KEY(problem) REFERENCES problems(name) ON DELETE CASCADE)"));
 
-    query.exec(QLatin1String("CREATE TABLE scores (userId INTEGER, problem varchar(50), score INTEGER, FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE, "
-                             "FOREIGN KEY(problem) REFERENCES problems(name) ON DELETE CASCADE)"));
 
 
     return true;
