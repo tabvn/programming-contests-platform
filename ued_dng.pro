@@ -3,7 +3,7 @@
 # Project created by QtCreator 2019-01-03T09:18:26
 #
 #-------------------------------------------------
-QT       += core gui sql
+QT       += core gui sql websockets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -25,12 +25,15 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-    dashboardwindow.cpp
+    dashboardwindow.cpp \
+    server.cpp
+
 
 HEADERS += \
     connection.h \
     dashboardwindow.h \
-    contest.h
+    contest.h \
+    server.h
 
 FORMS += \
     dashboardwindow.ui

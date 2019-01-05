@@ -23,9 +23,8 @@ private slots:
     void on_userTableWidget_itemChanged(QTableWidgetItem *item);
     void slotRemoveRecord();
     void slotCustomMenuRequested(QPoint pos);
-
-
     void on_problemComboBox_currentIndexChanged(const QString &arg1);
+
 
 private:
     Ui::DashboardWindow *ui;
