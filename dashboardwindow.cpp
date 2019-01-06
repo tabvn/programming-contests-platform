@@ -173,15 +173,14 @@ void setupProblemDetails(Ui::DashboardWindow *ui, Problem *problem){
 void setupViews(Ui::DashboardWindow *ui, Contest *contest){
 
     // setup scoreboard table
+    ui->tabWidget->setCurrentIndex(0);
     setupScoreTableView(ui->scoreTableWidget, contest);
     setupUserTableView(ui->userTableWidget, contest);
     setupProblemListComboBox(ui->problemComboBox, contest);
 
     setupProblemDetails(ui, contest->selectedProblem);
-
-
    // show first tab
-    ui->tabWidget->setCurrentIndex(0);
+
 
 }
 
@@ -346,7 +345,7 @@ void DashboardWindow::on_userTableWidget_itemChanged(QTableWidgetItem *item)
 void DashboardWindow::on_problemComboBox_currentIndexChanged(const QString &value)
 {
 
-    if(value == "+ New problem" && ui->tabWidget->currentIndex() == 2){
+    if(value == "+ New problem" && ui->tabWidget->currentIndex() == 1){
        bool ok;
        QString text = QInputDialog::getText(this, tr("Add Problem"),
                                             tr("Problem Name:"), QLineEdit::Normal,
@@ -449,19 +448,23 @@ void DashboardWindow::on_timelimitTextField_editingFinished()
 void DashboardWindow::on_actionSave_triggered()
 {
 
-    QString fileName = QFileDialog::getSaveFileName(this,
-            tr("Save Contest"), "",
-            tr("Contest (*.ued);;All Files (*)"));
+    if(this->contest->filePath.isEmpty()){
 
-        if (fileName.isEmpty())
-            return;
-        else {
-            if(!this->contest->saveFile(fileName)){
-                QMessageBox::information(this, tr("Unable to open file"),
-                    "An error saving.");
+        QString fileName = QFileDialog::getSaveFileName(this,
+                tr("Save Contest"), "",
+                tr("Contest (*.ued);;All Files (*)"));
+
+            if (fileName.isEmpty())
                 return;
+            else {
+                if(!this->contest->saveFile(fileName)){
+                    QMessageBox::information(this, tr("Unable to open file"),
+                        "An error saving.");
+                    return;
+                }
             }
-        }
+    }
+
 }
 
 void DashboardWindow::on_actionOpen_triggered()
