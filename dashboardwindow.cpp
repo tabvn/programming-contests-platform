@@ -41,12 +41,13 @@ QVariant getUserProblemScore(QSqlQuery *q, QVariant userId, QString problem){
  * @brief setupScoreTableView
  * @param table
  */
-void setupScoreTableView(QSqlQuery *q,QTableWidget *table, Contest *contest){
+void setupScoreTableView(QTableWidget *table, Contest *contest){
 
+    table->clear();
+    QSqlQuery *q = &contest->q;
     QStringList headers = { "ID", "Name"};
     QStringList problems;
     QString problemName;
-
 
     User user;
 
@@ -107,8 +108,10 @@ void setupScoreTableView(QSqlQuery *q,QTableWidget *table, Contest *contest){
 }
 
 
-void setupUserTableView(QSqlQuery *q, QTableWidget *table, Contest *contest){
+void setupUserTableView(QTableWidget *table, Contest *contest){
 
+
+    table->clear();
     QVector<User> users = contest->getUsers();
 
 
@@ -132,9 +135,6 @@ void setupUserTableView(QSqlQuery *q, QTableWidget *table, Contest *contest){
         table->setItem(row, 6, new QTableWidgetItem(users[row].password));
 
     }
-
-
-
     table->horizontalHeader()->setStretchLastSection(true);
 
 
@@ -169,32 +169,43 @@ void setupProblemDetails(Ui::DashboardWindow *ui, Problem *problem){
 
 }
 
+
+void setupViews(Ui::DashboardWindow *ui, Contest *contest){
+
+    // setup scoreboard table
+    setupScoreTableView(ui->scoreTableWidget, contest);
+    setupUserTableView(ui->userTableWidget, contest);
+    setupProblemListComboBox(ui->problemComboBox, contest);
+
+    setupProblemDetails(ui, contest->selectedProblem);
+
+
+   // show first tab
+    ui->tabWidget->setCurrentIndex(0);
+
+}
+
 DashboardWindow::DashboardWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::DashboardWindow)
 {
 
+
+    this->contest = new Contest();
+    this->contest->connect();
+
+
     ui->setupUi(this);
+
 
     this->ui->userTableWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->userTableWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotCustomMenuRequested(QPoint)));
 
 
 
-    QSqlQuery q;
-    this->contest = new Contest();
-
-    // setup scoreboard table
-    setupScoreTableView(&q, ui->scoreTableWidget, this->contest);
-    setupUserTableView(&q, ui->userTableWidget, this->contest);
-    setupProblemListComboBox(ui->problemComboBox, contest);
+    setupViews(this->ui, contest);
 
 
-    setupProblemDetails(ui, this->selectedProblem);
-
-
-   // show first tab
-    ui->tabWidget->setCurrentIndex(0);
 
 
 }
@@ -335,7 +346,7 @@ void DashboardWindow::on_userTableWidget_itemChanged(QTableWidgetItem *item)
 void DashboardWindow::on_problemComboBox_currentIndexChanged(const QString &value)
 {
 
-    if(value == "+ New problem"){
+    if(value == "+ New problem" && ui->tabWidget->currentIndex() == 2){
        bool ok;
        QString text = QInputDialog::getText(this, tr("Add Problem"),
                                             tr("Problem Name:"), QLineEdit::Normal,
@@ -364,8 +375,8 @@ void DashboardWindow::on_problemComboBox_currentIndexChanged(const QString &valu
 
     }else{
 
-        this->selectedProblem = this->contest->findProblemByName(value);
-        setupProblemDetails(ui, this->selectedProblem);
+        contest->selectedProblem = this->contest->findProblemByName(value);
+        setupProblemDetails(ui, contest->selectedProblem);
     }
 }
 
@@ -416,8 +427,8 @@ void DashboardWindow::on_deleteProblemButton_clicked()
             QMessageBox::warning(this, "Error", "Problem "+this->selectedProblem->name + " could not be deleted.");
         }else{
             if(this->selectedProblem != nullptr){
-                this->selectedProblem = nullptr;
-                delete [] this->selectedProblem;
+                contest->selectedProblem = nullptr;
+                delete [] contest->selectedProblem;
             }
 
             setupProblemListComboBox(ui->problemComboBox, this->contest);
@@ -432,5 +443,48 @@ void DashboardWindow::on_timelimitTextField_editingFinished()
        this->selectedProblem->timeLimit = ui->timelimitTextField->text().toInt();
        this->contest->updateProblem(this->selectedProblem->name, this->selectedProblem);
     }
+
+}
+
+void DashboardWindow::on_actionSave_triggered()
+{
+
+    QString fileName = QFileDialog::getSaveFileName(this,
+            tr("Save Contest"), "",
+            tr("Contest (*.ued);;All Files (*)"));
+
+        if (fileName.isEmpty())
+            return;
+        else {
+            if(!this->contest->saveFile(fileName)){
+                QMessageBox::information(this, tr("Unable to open file"),
+                    "An error saving.");
+                return;
+            }
+        }
+}
+
+void DashboardWindow::on_actionOpen_triggered()
+{
+    QString fileName = QFileDialog::getOpenFileName(this,
+           tr("Open contest"), "",
+           tr("Contest (*.ued);;All Files (*)"));
+
+       if (fileName.isEmpty())
+           return;
+       else {
+
+           if(!this->contest->openFile(fileName)){
+
+               QMessageBox::information(this, tr("Unable to open file"),
+                   "Could not open file");
+           }else{
+
+                //handle reload UI
+               setupViews(this->ui, this->contest);
+
+           }
+
+       }
 
 }

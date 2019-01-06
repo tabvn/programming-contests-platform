@@ -38,6 +38,10 @@ private slots:
 
     void on_timelimitTextField_editingFinished();
 
+    void on_actionSave_triggered();
+
+    void on_actionOpen_triggered();
+
 private:
     Ui::DashboardWindow *ui;
     Contest *contest;

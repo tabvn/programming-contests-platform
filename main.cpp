@@ -1,20 +1,12 @@
 #include <QApplication>
 #include <QtWidgets>
-#include "connection.h"
 #include "dashboardwindow.h"
 #include "server.h"
 
 int main(int argc, char *argv[])
 {
-     QApplication a( argc, argv );
-
-    if (!createConnection()){
-        return EXIT_FAILURE;
-    }
-
-
+    QApplication a( argc, argv );
     DashboardWindow dash;
-
     dash.show();
 
     bool debug = true;

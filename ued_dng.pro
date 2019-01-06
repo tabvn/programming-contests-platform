@@ -30,7 +30,6 @@ SOURCES += \
 
 
 HEADERS += \
-    connection.h \
     dashboardwindow.h \
     contest.h \
     server.h

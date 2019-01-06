@@ -7,6 +7,13 @@
 #include <QMap>
 #include <QtSql>
 #include <QMessageBox>
+#include <QSqlDatabase>
+#include <QSqlError>
+#include <QSqlQuery>
+#include <QFile>
+#include <QDir>
+#include <QDebug>
+#include <QtSql>
 
 
 struct User{
@@ -30,8 +37,7 @@ struct Test{
     QString problem;
 };
 
-struct Problem{
-
+struct Problem {
     QString name;
     QString description;
     QByteArray file;
@@ -53,7 +59,11 @@ struct Submission{
 };
 
 struct Contest{
-
+    QString filePath;
+    QString memoryPath = QDir::currentPath() + "/contest.ued";
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    bool shouldCreateSchema = true;
+    Problem *selectedProblem;
     QVector<User> users;
     QVector<User> scoreboardUsers;
     QVector<Problem> problems;
@@ -268,6 +278,120 @@ struct Contest{
 
         return true;
     }
+
+    bool connect(){
+
+        bool isMemoryDb = true;
+        if(this->filePath != "" && !this->filePath.isEmpty()){
+            QFile file(this->filePath);
+            if(file.open(QIODevice::ReadWrite)){
+                isMemoryDb = false;
+            }
+        }
+
+        if(isMemoryDb){
+            db.setDatabaseName(memoryPath);
+        }else{
+            db.setDatabaseName(this->filePath);
+        }
+
+
+        if (!db.open()) {
+            qDebug() << "could not open db";
+
+            return false;
+        }
+
+
+        if(this->shouldCreateSchema){
+
+            QSqlQuery query;
+            query.exec(QLatin1String("CREATE TABLE variables (name varchar(20) primary key, value varchar(20))"));
+
+            query.exec(QLatin1String("CREATE TABLE users (id PRIMARY KEY, className varchar(20), "
+                                     "firstname varchar(20), lastname varchar(20), email vachar(25) UNIQUE, password vachar(50), birthday INTEGER )"));
+
+            query.exec(QLatin1String("CREATE TABLE problems (name varchar(50) primary key, description TEXT, file BLOB, fileType varchar(50), maxScore INTEGER, timeLimit INTEGER, memoryLimit INTEGER)"));
+
+            query.exec(QLatin1String("CREATE TABLE tests (id INTEGER PRIMARY KEY, problem varchar(50), strength INTEGER, input CLOB, output CLOB, "
+                                     "FOREIGN KEY(problem) REFERENCES problems(name) ON DELETE CASCADE )"));
+
+            query.exec(QLatin1String("CREATE TABLE submissions (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, "
+                                     "problem vachar(50), code CLOB, score INTEGER, accepted INTEGER, error TEXT , status varchar(20), created INTEGER, "
+                                     "FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE, FOREIGN KEY(problem) REFERENCES problems(name) ON DELETE CASCADE)"));
+        }
+
+
+        return true;
+    }
+
+    void closeConnection(){
+        this->db.close();
+    }
+    bool saveFile(QString filePath){
+
+
+        if(this->filePath != filePath){
+
+            if(this->filePath != "" && !this->filePath.isNull()){
+
+                if (!QFile::copy(this->filePath, filePath)){
+                    return false;
+                }
+            }else{
+
+                if (!QFile::copy(this->memoryPath, filePath)){
+                    return false;
+                }
+
+                QFile::remove(this->memoryPath);
+            }
+
+            this->closeConnection();
+
+            this->filePath = filePath;
+
+            this->shouldCreateSchema = false;
+
+            this->connect();
+        }
+
+        return true;
+
+    }
+
+    bool openFile(QString fileName){
+
+       QFile file(fileName);
+
+       if (!file.open(QIODevice::ReadWrite)) {
+                  return false;
+       }
+       file.close();
+
+       this->filePath = fileName;
+
+       this->closeConnection();
+
+       this->connect();
+
+       this->clear();
+
+       return true;
+
+
+    }
+
+    void clear(){
+
+        this->problems.clear();
+        this->users.clear();
+        this->submissions.clear();
+        this->scoreboardUsers.clear();
+
+    }
+
+
 };
 
 
