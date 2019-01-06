@@ -36,6 +36,8 @@ private slots:
 
     void on_deleteProblemButton_clicked();
 
+    void on_timelimitTextField_editingFinished();
+
 private:
     Ui::DashboardWindow *ui;
     Contest *contest;

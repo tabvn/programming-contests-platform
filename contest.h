@@ -75,6 +75,7 @@ struct Contest{
         q.bindValue(":file", p->file);
         q.bindValue(":maxScore", p->maxScore);
         q.bindValue(":memoryLimit", p->memoryLimit);
+        q.bindValue(":timeLimit", p->timeLimit);
 
         if (!q.exec()){
 

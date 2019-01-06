@@ -151,7 +151,6 @@ void setupProblemListComboBox(QComboBox *box, Contest *contest){
     }
 
 
-
     box->addItem("+ New problem");
 
 }
@@ -424,4 +423,14 @@ void DashboardWindow::on_deleteProblemButton_clicked()
             setupProblemListComboBox(ui->problemComboBox, this->contest);
         }
     }
+}
+
+void DashboardWindow::on_timelimitTextField_editingFinished()
+{
+    if(this->selectedProblem != nullptr){
+
+       this->selectedProblem->timeLimit = ui->timelimitTextField->text().toInt();
+       this->contest->updateProblem(this->selectedProblem->name, this->selectedProblem);
+    }
+
 }
