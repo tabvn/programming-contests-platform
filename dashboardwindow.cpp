@@ -461,18 +461,16 @@ void DashboardWindow::on_deleteProblemButton_clicked()
 
     if (QMessageBox::question(this, "Delete problem confirmation", "Are you sure want to delete problem: " + contest->selectedProblem->name,QMessageBox::Yes|QMessageBox::No) == QMessageBox::Yes){
         //
+
         if (!this->contest->deleteProblem(contest->selectedProblem)){
             QMessageBox::warning(this, "Error", "Problem "+contest->selectedProblem->name + " could not be deleted.");
         }else{
 
-
             if(contest->selectedProblem != nullptr){
-
-                int index = contest->findProblemIndex(contest->selectedProblem->name);
-                ui->problemComboBox->removeItem(index);
-
+                setupProblemListComboBox(ui, contest);
                 contest->selectedProblem = nullptr;
-                delete [] contest->selectedProblem;
+
+
             }
 
 
