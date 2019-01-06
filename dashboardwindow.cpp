@@ -169,6 +169,10 @@ void setupProblemDetails(Ui::DashboardWindow *ui, Problem *problem){
 
 }
 
+void setupProblemsTab(Ui::DashboardWindow *ui, Contest *contest){
+     setupProblemDetails(ui, contest->selectedProblem);
+     setupProblemListComboBox(ui->problemComboBox, contest);
+}
 
 void setupViews(Ui::DashboardWindow *ui, Contest *contest){
 
@@ -176,12 +180,16 @@ void setupViews(Ui::DashboardWindow *ui, Contest *contest){
     ui->tabWidget->setCurrentIndex(0);
     setupScoreTableView(ui->scoreTableWidget, contest);
     setupUserTableView(ui->userTableWidget, contest);
-    setupProblemListComboBox(ui->problemComboBox, contest);
+    setupProblemsTab(ui, contest);
 
-    setupProblemDetails(ui, contest->selectedProblem);
    // show first tab
-
     ui->tabWidget->show();
+    ui->actionSave->setEnabled(true);
+    ui->actionSave_as->setEnabled(true);
+    if(contest->filePath.isEmpty()){
+         ui->actionSave->setEnabled(false);
+         ui->actionSave_as->setEnabled(false);
+    }
 
 }
 
@@ -191,7 +199,6 @@ DashboardWindow::DashboardWindow(QWidget *parent) :
 {
 
     this->contest = new Contest();
-    this->contest->connect();
 
     ui->setupUi(this);
 
@@ -199,6 +206,9 @@ DashboardWindow::DashboardWindow(QWidget *parent) :
 
     this->ui->userTableWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->userTableWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotCustomMenuRequested(QPoint)));
+
+    ui->actionSave->setEnabled(false);
+    ui->actionSave_as->setEnabled(false);
 
 }
 
@@ -478,9 +488,55 @@ void DashboardWindow::on_actionOpen_triggered()
 
                 //handle reload UI
                setupViews(this->ui, this->contest);
+               this->setWindowTitle(fileName);
 
            }
 
        }
 
+}
+
+void DashboardWindow::on_actionSave_as_triggered()
+{
+
+    QString fileName = QFileDialog::getSaveFileName(this,
+            tr("Save Contest"), "",
+            tr("Contest (*.ued);;All Files (*)"));
+
+        if (fileName.isEmpty())
+            return;
+        else {
+            if(!this->contest->saveFile(fileName)){
+                QMessageBox::information(this, tr("Unable to open file"),
+                    "An error saving.");
+                return;
+            }
+        }
+
+        this->setWindowTitle(fileName);
+
+}
+
+void DashboardWindow::on_tabWidget_currentChanged(int index)
+{
+    switch (index) {
+        case 0:
+
+        setupScoreTableView(ui->scoreTableWidget, this->contest);
+
+        break;
+    case 1:
+
+        setupProblemsTab(ui, this->contest);
+
+        break;
+
+    case 2:
+
+        setupUserTableView(ui->userTableWidget, this->contest);
+
+        break;
+    default:
+        break;
+    }
 }

@@ -42,6 +42,10 @@ private slots:
 
     void on_actionOpen_triggered();
 
+    void on_actionSave_as_triggered();
+
+    void on_tabWidget_currentChanged(int index);
+
 private:
     Ui::DashboardWindow *ui;
     Contest *contest;
