@@ -5,6 +5,7 @@
 #-------------------------------------------------
 QT       += core gui sql websockets
 
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = ued_dng
@@ -44,3 +45,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     images.qrc
+
+ICON = app.icns

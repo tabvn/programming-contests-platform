@@ -12,8 +12,8 @@
 #include <QSqlQuery>
 #include <QFile>
 #include <QDir>
-#include <QDebug>
 #include <QtSql>
+
 
 
 struct User{
@@ -24,6 +24,7 @@ struct User{
     QString email;
     QString password;
     QDateTime birthday;
+
 
 
 
@@ -38,6 +39,7 @@ struct Test{
 };
 
 struct Problem {
+
     QString name;
     QString description;
     QByteArray file;
@@ -59,22 +61,58 @@ struct Submission{
 };
 
 struct Contest{
+
     QString filePath;
-    QString memoryPath = QDir::currentPath() + "/contest.ued";
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    QString memoryPath;
     bool shouldCreateSchema = true;
-    Problem *selectedProblem;
+    Problem *selectedProblem = nullptr;
     QVector<User> users;
     QVector<User> scoreboardUsers;
     QVector<Problem> problems;
     QVector<Submission> submissions;
+    bool connected;
 
-    QSqlQuery q;
+    Contest(){
+
+        this->connected = false;
+        this->shouldCreateSchema = true;
+        this->memoryPath = ":memory.db";
+    }
+
+    void setupSchema(){
+
+        QSqlQuery q;
+
+        q.exec(QLatin1String("CREATE TABLE variables (name varchar(20) primary key, value varchar(20))"));
+
+        q.exec(QLatin1String("CREATE TABLE users (id PRIMARY KEY, className varchar(20), "
+                                 "firstname varchar(20), lastname varchar(20), email vachar(25) UNIQUE, password vachar(50), birthday INTEGER )"));
+
+        q.exec(QLatin1String("CREATE TABLE problems (name varchar(50) primary key, description TEXT, file BLOB, fileType varchar(50), maxScore INTEGER, timeLimit INTEGER, memoryLimit INTEGER)"));
+
+        q.exec(QLatin1String("CREATE TABLE tests (id INTEGER PRIMARY KEY, problem varchar(50), strength INTEGER, input CLOB, output CLOB, "
+                                 "FOREIGN KEY(problem) REFERENCES problems(name) ON DELETE CASCADE )"));
+
+        q.exec(QLatin1String("CREATE TABLE submissions (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, "
+                                 "problem vachar(50), code CLOB, score INTEGER, accepted INTEGER, error TEXT , status varchar(20), created INTEGER, "
+                                 "FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE, FOREIGN KEY(problem) REFERENCES problems(name) ON DELETE CASCADE)"));
+
+    }
+
+    int findProblemIndex(QString name){
+        for (int i = 0; i < problems.size(); i++) {
+            if(name == problems[i].name){
+                return i;
+            }
+        }
+        return -1;
+    }
 
     bool updateProblem(QString name, Problem *p){
+         QSqlQuery q;
+
         if(!q.prepare("update problems set name=:newName, description=:description, fileType=:fileType, file =:file, maxScore=:maxScore, timeLimit=:timeLimit, memoryLimit=:memoryLimit WHERE name=:name")){
 
-            qDebug() << "prepare error" << q.lastError();
             return false;
         }
 
@@ -89,15 +127,17 @@ struct Contest{
 
         if (!q.exec()){
 
-            qDebug() << "exec error" << q.lastError();
-
             return false;
         }
+
+
 
         return true;
     }
 
     bool deleteProblem(Problem *p){
+
+    QSqlQuery q;
         if(!q.prepare("delete from problems where name =:name")){
             return false;
         }
@@ -115,6 +155,8 @@ struct Contest{
                 break;
             }
         }
+
+
         return true;
     }
     Problem *findProblemByName(QString name){
@@ -129,6 +171,8 @@ struct Contest{
     }
 
     bool addProblem(Problem p){
+        QSqlQuery q;
+
 
         if (!q.prepare("insert into problems (name, description, maxScore, timeLimit, memoryLimit) values(:name, :description, :maxScore, :timeLimit, :memoryLimit)")){
 
@@ -146,22 +190,33 @@ struct Contest{
             return false;
         }
         this->problems.push_back(p);
+
+
+
         return true;
     }
     QVector<Problem> getProblems(){
 
-        if(this->problems.empty()){
-            this->q.exec("select name, description, file, fileType, maxScore, timeLimit, memoryLimit from problems order by name asc");
 
-            while(this->q.next()){
+        QSqlQuery q;
+        if(this->problems.empty()){
+            if(!q.prepare("select name, description,maxScore, timeLimit, memoryLimit from problems where name is not null order by name asc")){
+                qDebug() << q.lastError();
+                return this->problems;
+            }
+
+            if(!q.exec()){
+                qDebug() << q.lastError();
+                return this->problems;
+            }
+
+            while(q.next()){
                 Problem p;
                 p.name =  q.value(0).toString();
                 p.description = q.value(1).toString();
-                p.file = q.value(2).toByteArray();
-                p.fileType = q.value(3).toString();
-                p.maxScore = q.value(4).toInt();
-                p.timeLimit = q.value(5).toInt();
-                p.memoryLimit = q.value(6).toInt();
+                p.maxScore = q.value(2).toInt();
+                p.timeLimit = q.value(3).toInt();
+                p.memoryLimit = q.value(4).toInt();
 
                 this->problems.push_back(p);
             }
@@ -171,9 +226,17 @@ struct Contest{
     QVector<User> getUsers(){
 
 
+        QSqlQuery q;
+
         if(this->users.empty()){
 
-            this->q.exec("select id, firstname, lastname, className, birthday, email, password from users order by firstname asc");
+            if(!q.prepare("select id, firstname, lastname, className, birthday, email, password from users order by firstname asc")){
+                return this->users;
+            }
+            if(!q.exec()){
+                return this->users;
+            }
+
             while (q.next()) {
 
                 User u;
@@ -188,6 +251,7 @@ struct Contest{
                 this->users.push_back(u);
             }
         }
+        q.clear();
         return this->users;
     }
 
@@ -195,9 +259,16 @@ struct Contest{
         User u;
 
 
+        QSqlQuery q;
+
         if(this->scoreboardUsers.empty()){
 
-            this->q.exec("SELECT u.id, u.firstname, u.lastname, u.className, u.birthday, u.email, u.password FROM users as u inner join submissions as s ON s.userId = u.id  order by firstname asc");
+            if(!q.prepare("SELECT u.id, u.firstname, u.lastname, u.className, u.birthday, u.email, u.password FROM users as u inner join submissions as s ON s.userId = u.id  order by firstname asc")){
+                return this->scoreboardUsers;
+            }
+            if (!q.exec()){
+                return this->scoreboardUsers;
+            }
 
             while (q.next()) {
                 u.id = q.value(0).toInt();
@@ -217,6 +288,8 @@ struct Contest{
 
     bool addUser(User *user){
 
+
+        QSqlQuery q;
         if(!user->id || user->id == 0){
             return false;
         }
@@ -232,7 +305,7 @@ struct Contest{
         q.bindValue(":email", user->email);
         q.bindValue(":password", user->password);
 
-        if(!this->q.exec()){
+        if(!q.exec()){
             return false;
         }
         this->users.push_back(*user);
@@ -241,6 +314,8 @@ struct Contest{
     }
 
     bool removeUser(User *user){
+
+        QSqlQuery q;
 
         if(!q.prepare("delete from users where id=:id")){
             return false;
@@ -255,12 +330,14 @@ struct Contest{
     }
 
     bool updateUser(qint64 id, User *user){
+        QSqlQuery q;
         if(!user->id || user->id == 0 || !id || id == 0){
             return false;
         }
 
-        if(!q.prepare("update users set id=:newId, firstname=:firstname, lastname=:lastname, className=:className, birthday=:birthday, email=:email, password=:password where id=:id")){
 
+
+        if(!q.prepare("update users set id=:newId, firstname=:firstname, lastname=:lastname, className=:className, birthday=:birthday, email=:email, password=:password where id=:id")){
             return false;
         }
         q.bindValue(":id", id);
@@ -271,7 +348,7 @@ struct Contest{
         q.bindValue(":birthday", user->birthday.toTime_t());
         q.bindValue(":email", user->email);
         q.bindValue(":password", user->password);
-        if(!this->q.exec()){
+        if(!q.exec()){
 
             return false;
         }
@@ -279,55 +356,7 @@ struct Contest{
         return true;
     }
 
-    bool connect(){
 
-        bool isMemoryDb = true;
-        if(this->filePath != "" && !this->filePath.isEmpty()){
-            QFile file(this->filePath);
-            if(file.open(QIODevice::ReadWrite)){
-                isMemoryDb = false;
-            }
-        }
-
-        if(isMemoryDb){
-            db.setDatabaseName(memoryPath);
-        }else{
-            db.setDatabaseName(this->filePath);
-        }
-
-
-        if (!db.open()) {
-            qDebug() << "could not open db";
-
-            return false;
-        }
-
-
-        if(this->shouldCreateSchema){
-
-            QSqlQuery query;
-            query.exec(QLatin1String("CREATE TABLE variables (name varchar(20) primary key, value varchar(20))"));
-
-            query.exec(QLatin1String("CREATE TABLE users (id PRIMARY KEY, className varchar(20), "
-                                     "firstname varchar(20), lastname varchar(20), email vachar(25) UNIQUE, password vachar(50), birthday INTEGER )"));
-
-            query.exec(QLatin1String("CREATE TABLE problems (name varchar(50) primary key, description TEXT, file BLOB, fileType varchar(50), maxScore INTEGER, timeLimit INTEGER, memoryLimit INTEGER)"));
-
-            query.exec(QLatin1String("CREATE TABLE tests (id INTEGER PRIMARY KEY, problem varchar(50), strength INTEGER, input CLOB, output CLOB, "
-                                     "FOREIGN KEY(problem) REFERENCES problems(name) ON DELETE CASCADE )"));
-
-            query.exec(QLatin1String("CREATE TABLE submissions (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, "
-                                     "problem vachar(50), code CLOB, score INTEGER, accepted INTEGER, error TEXT , status varchar(20), created INTEGER, "
-                                     "FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE, FOREIGN KEY(problem) REFERENCES problems(name) ON DELETE CASCADE)"));
-        }
-
-
-        return true;
-    }
-
-    void closeConnection(){
-        this->db.close();
-    }
     bool saveFile(QString filePath){
 
 
@@ -347,13 +376,13 @@ struct Contest{
                 QFile::remove(this->memoryPath);
             }
 
-            this->closeConnection();
+
 
             this->filePath = filePath;
 
             this->shouldCreateSchema = false;
 
-            this->connect();
+            //this->connect();
         }
 
         return true;
@@ -362,32 +391,46 @@ struct Contest{
 
     bool openFile(QString fileName){
 
-       QFile file(fileName);
+       QString path = this->filePath;
 
-       if (!file.open(QIODevice::ReadWrite)) {
-                  return false;
-       }
-       file.close();
-
+       this->shouldCreateSchema = false;
        this->filePath = fileName;
 
-       this->closeConnection();
+       QSqlDatabase _db = QSqlDatabase::addDatabase("QSQLITE");
 
-       this->connect();
+        _db.setDatabaseName(this->filePath);
 
-       this->clear();
+        if(_db.open()){
 
-       return true;
+            qDebug() << _db.lastError();
+            this->clear();
+            return true;
+        }
+
+       // QSqlDatabase::removeDatabase(path);
+
+
+       return false;
 
 
     }
 
     void clear(){
 
-        this->problems.clear();
-        this->users.clear();
-        this->submissions.clear();
-        this->scoreboardUsers.clear();
+        if(!this->problems.empty()){
+            this->problems.clear();
+        }
+
+        if(!this->users.isEmpty()){
+            this->users.clear();
+        }
+        if(!this->submissions.empty()){
+            this->submissions.clear();
+        }
+
+        if(!this->scoreboardUsers.empty()){
+            this->scoreboardUsers.clear();
+        }
 
     }
 

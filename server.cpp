@@ -1,7 +1,6 @@
 #include "server.h"
 #include "QtWebSockets/qwebsocketserver.h"
 #include "QtWebSockets/qwebsocket.h"
-#include <QtCore/QDebug>
 
 QT_USE_NAMESPACE
 
@@ -13,7 +12,7 @@ Server::Server(quint16 port, bool debug, QObject *parent) :
 {
     if (m_pWebSocketServer->listen(QHostAddress::Any, port)) {
         if (m_debug)
-            qDebug() << "Echoserver listening on port" << port;
+
         connect(m_pWebSocketServer, &QWebSocketServer::newConnection,
                 this, &Server::onNewConnection);
         connect(m_pWebSocketServer, &QWebSocketServer::closed, this, &Server::closed);
@@ -50,7 +49,7 @@ void Server::processTextMessage(QString message)
 
     QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
     if (m_debug)
-        qDebug() << "Message received:" << message;
+        //qDebug() << "Message received:" << message;
     if (pClient) {
         pClient->sendTextMessage(message);
     }
@@ -60,7 +59,7 @@ void Server::processBinaryMessage(QByteArray message)
 {
     QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
     if (m_debug)
-        qDebug() << "Binary Message received:" << message;
+       // qDebug() << "Binary Message received:" << message;
     if (pClient) {
         pClient->sendBinaryMessage(message);
     }
@@ -70,7 +69,7 @@ void Server::socketDisconnected()
 {
     QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
     if (m_debug)
-        qDebug() << "socketDisconnected:" << pClient;
+       // qDebug() << "socketDisconnected:" << pClient;
     if (pClient) {
         m_clients.removeAll(pClient);
         pClient->deleteLater();

@@ -1,5 +1,6 @@
 <RCC>
-    <qresource prefix="/new/image">
+    <qresource prefix="/">
         <file>ued.png</file>
+        <file>app.icns</file>
     </qresource>
 </RCC>

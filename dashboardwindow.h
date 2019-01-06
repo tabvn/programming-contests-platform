@@ -23,8 +23,6 @@ private slots:
     void on_userTableWidget_itemChanged(QTableWidgetItem *item);
     void slotRemoveRecord();
     void slotCustomMenuRequested(QPoint pos);
-    void on_problemComboBox_currentIndexChanged(const QString &arg1);
-
 
     void on_maxScoreTextField_editingFinished();
 
@@ -43,13 +41,12 @@ private slots:
     void on_actionOpen_triggered();
 
     void on_actionSave_as_triggered();
-
-    void on_tabWidget_currentChanged(int index);
+    void on_problemComboBox_currentTextChanged(const QString &arg1);
 
 private:
     Ui::DashboardWindow *ui;
     Contest *contest;
-    Problem *selectedProblem;
+
 
 };
 
