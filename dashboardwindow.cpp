@@ -181,6 +181,7 @@ void setupViews(Ui::DashboardWindow *ui, Contest *contest){
     setupProblemDetails(ui, contest->selectedProblem);
    // show first tab
 
+    ui->tabWidget->show();
 
 }
 
@@ -189,23 +190,15 @@ DashboardWindow::DashboardWindow(QWidget *parent) :
     ui(new Ui::DashboardWindow)
 {
 
-
     this->contest = new Contest();
     this->contest->connect();
 
-
     ui->setupUi(this);
 
+    this->ui->tabWidget->hide();
 
     this->ui->userTableWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->userTableWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotCustomMenuRequested(QPoint)));
-
-
-
-    setupViews(this->ui, contest);
-
-
-
 
 }
 
@@ -214,7 +207,7 @@ void DashboardWindow::slotCustomMenuRequested(QPoint pos)
 
     QMenu * menu = new QMenu(this);
 
-    QAction * deleteDevice = new QAction(trUtf8("Delete"), this);
+    QAction *deleteDevice = new QAction(tr("Delete"), this);
 
     connect(deleteDevice, SIGNAL(triggered()), this, SLOT(slotRemoveRecord())); // Handler delete records
 
