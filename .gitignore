@@ -1,0 +1,4 @@
+ued_dng.app
+./ued_dng.app/*
+Makefile
+*.o
