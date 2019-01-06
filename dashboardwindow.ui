@@ -177,8 +177,11 @@
                 </item>
                 <item row="6" column="1">
                  <widget class="QPushButton" name="deleteProblemButton">
+                  <property name="styleSheet">
+                   <string notr="true">color: rgb(255, 13, 19);</string>
+                  </property>
                   <property name="text">
-                   <string>Delete this problem</string>
+                   <string>Delete this problem?</string>
                   </property>
                  </widget>
                 </item>

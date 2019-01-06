@@ -26,6 +26,16 @@ private slots:
     void on_problemComboBox_currentIndexChanged(const QString &arg1);
 
 
+    void on_maxScoreTextField_editingFinished();
+
+    void on_problemTextField_editingFinished();
+
+    void on_memoryLimitTextField_editingFinished();
+
+    void on_descriptionTextField_textChanged();
+
+    void on_deleteProblemButton_clicked();
+
 private:
     Ui::DashboardWindow *ui;
     Contest *contest;

@@ -61,7 +61,51 @@ struct Contest{
 
     QSqlQuery q;
 
+    bool updateProblem(QString name, Problem *p){
+        if(!q.prepare("update problems set name=:newName, description=:description, fileType=:fileType, file =:file, maxScore=:maxScore, timeLimit=:timeLimit, memoryLimit=:memoryLimit WHERE name=:name")){
 
+            qDebug() << "prepare error" << q.lastError();
+            return false;
+        }
+
+        q.bindValue(":name", name);
+        q.bindValue(":newName",p-> name);
+        q.bindValue(":description", p->description);
+        q.bindValue(":fileType", p->fileType);
+        q.bindValue(":file", p->file);
+        q.bindValue(":maxScore", p->maxScore);
+        q.bindValue(":memoryLimit", p->memoryLimit);
+
+        if (!q.exec()){
+
+            qDebug() << "exec error" << q.lastError();
+
+            return false;
+        }
+
+        return true;
+    }
+
+    bool deleteProblem(Problem *p){
+        if(!q.prepare("delete from problems where name =:name")){
+            return false;
+        }
+
+        q.bindValue(":name", p->name);
+
+        if(!q.exec()){
+            return false;
+        }
+
+        for (int i = 0; i < this->problems.size(); i++) {
+            if(this->problems[i].name == p->name){
+                this->problems.removeAt(i);
+
+                break;
+            }
+        }
+        return true;
+    }
     Problem *findProblemByName(QString name){
 
         for (int i = 0; i < this->problems.size(); i++) {
@@ -72,6 +116,7 @@ struct Contest{
         }
         return nullptr;
     }
+
     bool addProblem(Problem p){
 
         if (!q.prepare("insert into problems (name, description, maxScore, timeLimit, memoryLimit) values(:name, :description, :maxScore, :timeLimit, :memoryLimit)")){

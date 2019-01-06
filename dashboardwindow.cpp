@@ -162,6 +162,11 @@ void setupProblemDetails(Ui::DashboardWindow *ui, Problem *problem){
     }
 
     ui->problemTextField->setText(problem->name);
+    ui->maxScoreTextField->setText(QString::number(problem->maxScore));
+    ui->memoryLimitTextField->setText(QString::number(problem->memoryLimit));
+    ui->timelimitTextField->setText(QString::number(problem->timeLimit));
+    ui->descriptionTextField->setHtml(problem->description);
+
 
 }
 
@@ -362,5 +367,61 @@ void DashboardWindow::on_problemComboBox_currentIndexChanged(const QString &valu
 
         this->selectedProblem = this->contest->findProblemByName(value);
         setupProblemDetails(ui, this->selectedProblem);
+    }
+}
+
+
+void DashboardWindow::on_maxScoreTextField_editingFinished()
+{
+
+    if(this->selectedProblem != nullptr){
+       QString name = this->selectedProblem->name;
+       int maxScore =  ui->maxScoreTextField->text().toInt();
+       this->selectedProblem->maxScore = maxScore;
+       this->contest->updateProblem(name, this->selectedProblem);
+    }
+}
+
+void DashboardWindow::on_problemTextField_editingFinished()
+{
+    if(this->selectedProblem != nullptr){
+       QString name = this->selectedProblem->name;
+       this->selectedProblem->name = ui->problemTextField->text();
+       this->contest->updateProblem(name, this->selectedProblem);
+    }
+}
+
+void DashboardWindow::on_memoryLimitTextField_editingFinished()
+{
+    if(this->selectedProblem != nullptr){
+       this->selectedProblem->memoryLimit = ui->memoryLimitTextField->text().toInt();
+       this->contest->updateProblem(this->selectedProblem->name, this->selectedProblem);
+    }
+}
+
+void DashboardWindow::on_descriptionTextField_textChanged()
+{
+    if(this->selectedProblem != nullptr){
+
+       this->selectedProblem->description = ui->descriptionTextField->toHtml();
+       this->contest->updateProblem(this->selectedProblem->name, this->selectedProblem);
+    }
+
+}
+
+void DashboardWindow::on_deleteProblemButton_clicked()
+{
+    if (QMessageBox::question(this, "Delete problem confirmation", "Are you sure want to delete problem: " + this->selectedProblem->name,QMessageBox::Yes|QMessageBox::No) == QMessageBox::Yes){
+        //
+        if (!this->contest->deleteProblem(this->selectedProblem)){
+            QMessageBox::warning(this, "Error", "Problem "+this->selectedProblem->name + " could not be deleted.");
+        }else{
+            if(this->selectedProblem != nullptr){
+                this->selectedProblem = nullptr;
+                delete [] this->selectedProblem;
+            }
+
+            setupProblemListComboBox(ui->problemComboBox, this->contest);
+        }
     }
 }
