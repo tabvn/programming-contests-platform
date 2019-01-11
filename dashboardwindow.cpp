@@ -173,8 +173,62 @@ void setupProblemDetails(Ui::DashboardWindow *ui, Problem *problem){
 
 }
 
+void onSelectProblemTest(Ui::DashboardWindow *ui, Contest *contest, Test *t){
+
+    if (contest->selectedProblem == nullptr || t == nullptr){
+        return;
+    }
+
+    t->loadInputOutput();
+    contest->selectedProblem->selectedTest = t;
+    ui->inputTestCaseTextField->setPlainText(t->input);
+    ui->outputTestCaseTextField->setPlainText(t->output);
+
+}
+
+void insertItemToTableTestCase(Ui::DashboardWindow *ui, Test *t, int row){
+
+    ui->testcaseTableWidget->setItem(row, 0, new QTableWidgetItem(QString::number(t->strength)));
+
+
+}
+void setupTestcaseTable(Ui::DashboardWindow *ui, Contest *contest){
+
+    if(contest->selectedProblem == nullptr){
+        return;
+    }
+    ui->testcaseTableWidget->clear();
+
+    QStringList headers = {"Strength"};
+
+    ui->testcaseTableWidget->setColumnCount(1);
+    ui->testcaseTableWidget->setHorizontalHeaderLabels(headers);
+    QVector<Test> tests = contest->selectedProblem->getTests();
+    Test t;
+
+    ui->testcaseTableWidget->setRowCount(tests.size());
+
+    for(int row = 0; row < tests.size(); row++){
+
+       t = tests[row];
+       insertItemToTableTestCase(ui, &t, row);
+
+    }
+
+    ui->testcaseTableWidget->horizontalHeader()->setStretchLastSection(true);
+
+    if(contest->selectedProblem->selectedTest == nullptr){
+        ui->inputTestCaseTextField->setPlainText("");
+        ui->outputTestCaseTextField->setPlainText("");
+    }
+
+
+
+}
 void setupProblemsTab(Ui::DashboardWindow *ui, Contest *contest){
 
+
+     ui->problemDetailTabWidget->setCurrentIndex(0);
      setupProblemListComboBox(ui, contest);
      setupProblemDetails(ui, contest->selectedProblem);
 }
@@ -199,8 +253,8 @@ void setupViews(Ui::DashboardWindow *ui, Contest *contest){
          ui->actionSave_as->setEnabled(false);
     }
 
-
     ui->tabWidget->setCurrentIndex(0);
+
 
 
 }
@@ -210,22 +264,48 @@ void setupViews(Ui::DashboardWindow *ui, Contest *contest){
  * @brief DashboardWindow::DashboardWindow
  * @param parent
  */
+
 DashboardWindow::DashboardWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::DashboardWindow)
 {
 
+
+
     this->contest = new Contest();
 
     ui->setupUi(this);
+
     this->ui->tabWidget->hide();
     this->ui->userTableWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->testcaseTableWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+
     connect(ui->userTableWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotCustomMenuRequested(QPoint)));
+
+    connect(ui->testcaseTableWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotCustomMenuRequestedTestCaseTable(QPoint)));
 
     ui->actionSave->setEnabled(false);
     ui->actionSave_as->setEnabled(false);
 
+}
 
+void DashboardWindow::slotCustomMenuRequestedTestCaseTable(QPoint pos)
+{
+
+    QMenu * menu = new QMenu(this);
+
+    QAction *del = new QAction(tr("Delete"), this);
+
+    connect(del, SIGNAL(triggered()), this, SLOT(slotRemoveTestCaseTableItem())); // Handler delete records
+
+    ui->testcaseTableWidget->selectRow(ui->testcaseTableWidget->currentRow());
+    menu->addAction(del);
+
+   menu->popup(ui->testcaseTableWidget->viewport()->mapToGlobal(pos));
+
+}
+
+void DashboardWindow::slotRemoveTestCaseTableItem(){
 
 }
 
@@ -234,12 +314,12 @@ void DashboardWindow::slotCustomMenuRequested(QPoint pos)
 
     QMenu * menu = new QMenu(this);
 
-    QAction *deleteDevice = new QAction(tr("Delete"), this);
+    QAction *del = new QAction(tr("Delete"), this);
 
-    connect(deleteDevice, SIGNAL(triggered()), this, SLOT(slotRemoveRecord())); // Handler delete records
+    connect(del, SIGNAL(triggered()), this, SLOT(slotRemoveRecord())); // Handler delete records
 
     ui->userTableWidget->selectRow(ui->userTableWidget->currentRow());
-    menu->addAction(deleteDevice);
+    menu->addAction(del);
 
    menu->popup(ui->userTableWidget->viewport()->mapToGlobal(pos));
 
@@ -249,18 +329,17 @@ void DashboardWindow::slotRemoveRecord()
 {
 
     int row = ui->userTableWidget->selectionModel()->currentIndex().row();
-
-    if(row >= 0){
-        if(row < this->contest->users.size()){
-            if (contest->removeUser(&this->contest->users[row])){
-                this->contest->users.removeAt(row);
-                ui->userTableWidget->removeRow(row);
-                QModelIndex next_index = ui->userTableWidget->model()->index(row -1, 0);
-                ui->userTableWidget->setCurrentIndex(next_index);
-            }
-
-        }
+    if(row < 0 || row >= this->contest->users.size()){
+        return;
     }
+    if (contest->removeUser(&this->contest->users[row])){
+        this->contest->users.removeAt(row);
+        ui->userTableWidget->removeRow(row);
+        QModelIndex next_index = ui->userTableWidget->model()->index(row -1, 0);
+        ui->userTableWidget->setCurrentIndex(next_index);
+    }
+
+
 }
 
 DashboardWindow::~DashboardWindow()
@@ -316,6 +395,8 @@ void setUserDataByColumnIndex(User *user, int column, QString value){
 
 }
 
+
+
 void DashboardWindow::on_userTableWidget_itemChanged(QTableWidgetItem *item)
 {
 
@@ -362,8 +443,6 @@ void DashboardWindow::on_userTableWidget_itemChanged(QTableWidgetItem *item)
 void DashboardWindow::on_problemComboBox_currentTextChanged(const QString &value)
 {
 
-
-
     if(value == "+ New problem" && ui->tabWidget->currentIndex() == 1){
        bool ok;
        QString text = QInputDialog::getText(this, tr("Add Problem"),
@@ -399,6 +478,7 @@ void DashboardWindow::on_problemComboBox_currentTextChanged(const QString &value
 
         contest->selectedProblem = this->contest->findProblemByName(value);
         setupProblemDetails(ui, contest->selectedProblem);
+        setupTestcaseTable(this->ui, contest);
     }
 
 }
@@ -443,8 +523,7 @@ void DashboardWindow::on_memoryLimitTextField_editingFinished()
 void DashboardWindow::on_descriptionTextField_textChanged()
 {
     if(contest->selectedProblem != nullptr){
-
-       contest->selectedProblem->description = ui->descriptionTextField->toHtml();
+       contest->selectedProblem->description = ui->descriptionTextField->toPlainText();
        this->contest->updateProblem(contest->selectedProblem->name, contest->selectedProblem);
     }
 
@@ -515,7 +594,7 @@ void DashboardWindow::on_actionOpen_triggered()
 
 
     QString fileName = QFileDialog::getOpenFileName(this,
-           tr("Open contest"), "",
+           tr("Open contest"), QDir::homePath(),
            tr("Contest (*.ued);;All Files (*)"));
 
        if (fileName.isEmpty())
@@ -542,13 +621,23 @@ void DashboardWindow::on_actionSave_as_triggered()
 {
 
     QString fileName = QFileDialog::getSaveFileName(this,
-            tr("Save Contest"), "",
+            tr("Save Contest"), QDir::homePath(),
             tr("Contest (*.ued);;All Files (*)"));
 
+
+    if(fileName != contest->filePath){
+
+        QFile file(fileName);
+        if(file.exists()){
+            file.remove();
+            file.close();
+        }
+
+    }
         if (fileName.isEmpty())
             return;
         else {
-            if(!this->contest->saveFile(fileName)){
+            if(!contest->saveFile(fileName)){
                 QMessageBox::information(this, tr("Unable to open file"),
                     "An error saving.");
                 return;
@@ -559,4 +648,154 @@ void DashboardWindow::on_actionSave_as_triggered()
 
 }
 
+void DashboardWindow::on_actionNew_Contest_triggered()
+{
 
+    QString fileName = QFileDialog::getSaveFileName(this,tr("New Contest"), QDir::homePath(), tr("Contest (*.ued);;All Files (*)"));
+
+    if (fileName.isEmpty()){
+        return;
+    }
+
+
+    QFile file(fileName);
+    if(file.exists()){
+
+        file.remove();
+        file.close();
+    }
+    if(contest->createContest(fileName)){
+
+        setupViews(this->ui, contest);
+        this->setWindowTitle(fileName);
+
+    }else{
+
+        QMessageBox::information(this, tr("An error"),
+            "An error creating new contest.");
+    }
+
+
+}
+
+
+void DashboardWindow::on_addTestCaseBtn_clicked()
+{
+    Test t;
+    t.strength = 10;
+    t.problem = contest->selectedProblem->name;
+    if (contest->addTestCase(&t)){
+       contest->selectedProblem->tests.push_back(t);
+       setupTestcaseTable(this->ui, contest);
+       ui->testcaseTableWidget->setCurrentCell(ui->testcaseTableWidget->rowCount() -1, 0);
+       ui->testcaseTableWidget->scrollToBottom();
+
+
+    }
+}
+
+
+void DashboardWindow::on_testcaseTableWidget_itemSelectionChanged()
+{
+
+    onSelectProblemTest(ui,contest, contest->selectedProblem->findTestByIndex(ui->testcaseTableWidget->currentRow()));
+
+}
+
+void DashboardWindow::on_deleteTestCaseBtn_clicked()
+{
+
+    QModelIndexList indexList = ui->testcaseTableWidget->selectionModel()->selectedIndexes();
+    int row = -1;
+
+    foreach (QModelIndex index, indexList) {
+        row = index.row();
+        if(contest->selectedProblem == nullptr){
+            return;
+        }
+
+        Test *t = contest->selectedProblem->findTestByIndex(row);
+        if(t != nullptr){
+            t->remove();
+        }
+
+        contest->selectedProblem->selectedTest = nullptr;
+
+    }
+
+
+
+    if(row > -1){
+        setupTestcaseTable(ui, contest);
+        if(ui->testcaseTableWidget->rowCount() > 0){
+            if(row == 0){
+                ui->testcaseTableWidget->setCurrentCell(0, 0);
+            }else{
+                ui->testcaseTableWidget->setCurrentCell(row-1, 0);
+            }
+        }
+    }
+
+
+}
+
+
+void DashboardWindow::on_testcaseTableWidget_cellChanged(int row, int column)
+{
+
+    if(contest->selectedProblem == nullptr){
+        return;
+    }
+    if(contest->selectedProblem->selectedTest == nullptr){
+        return;
+    }
+    if(column == 0){
+        int value = ui->testcaseTableWidget->item(row, column)->text().toInt();
+        if(contest->selectedProblem->tests[row].strength == value){
+            return;
+        }
+
+        contest->selectedProblem->selectedTest->strength = value;
+        contest->selectedProblem->selectedTest->save();
+
+
+    }
+}
+
+void DashboardWindow::on_inputTestCaseTextField_textChanged()
+{
+
+    if(contest->selectedProblem == nullptr){
+        return ;
+    }
+
+    if(contest->selectedProblem->selectedTest == nullptr){
+        return;
+    }
+
+    QString input = ui->inputTestCaseTextField->toPlainText();
+    contest->selectedProblem->selectedTest->input = input;
+
+    if (!contest->selectedProblem->selectedTest->updateInput(input)){
+        QMessageBox::warning(this, "Error save test case", "An error saving testcase");
+    }
+}
+
+void DashboardWindow::on_outputTestCaseTextField_textChanged()
+{
+
+    if(contest->selectedProblem == nullptr){
+        return ;
+    }
+
+    if(contest->selectedProblem->selectedTest == nullptr){
+        return;
+    }
+    QString output = ui->outputTestCaseTextField->toPlainText();
+    contest->selectedProblem->selectedTest->output = output;
+
+    if (!contest->selectedProblem->selectedTest->updateOutput(output)){
+        QMessageBox::warning(this, "Error save test case", "An error saving testcase");
+    }
+
+}

@@ -4,11 +4,17 @@
 #include "server.h"
 
 
+#include <QApplication>
+#include <QFileOpenEvent>
+#include <QtDebug>
+
+
+
 int main(int argc, char *argv[])
 {
 
-
     QApplication a( argc, argv );
+
 
     DashboardWindow dash;
     dash.show();
