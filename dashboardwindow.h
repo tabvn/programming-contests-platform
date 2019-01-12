@@ -13,9 +13,11 @@ class DashboardWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit DashboardWindow(QWidget *parent = nullptr);
-    ~DashboardWindow();
 
+
+    explicit DashboardWindow(QWidget *parent = nullptr, Contest *contest = nullptr);
+
+    ~DashboardWindow();
 
 private slots:
 
@@ -62,11 +64,15 @@ private slots:
 
     void on_outputTestCaseTextField_textChanged();
 
+    void on_contestButton_clicked();
+
 private:
 
     Ui::DashboardWindow *ui;
     Contest *contest;
 
+signals:
+    void valueChanged(int newValue);
 };
 
 #endif // DASHBOARDWINDOW_H

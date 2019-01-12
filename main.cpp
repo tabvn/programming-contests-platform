@@ -1,26 +1,27 @@
 #include <QApplication>
 #include <QtWidgets>
 #include "dashboardwindow.h"
-#include "server.h"
-
 
 #include <QApplication>
 #include <QFileOpenEvent>
 #include <QtDebug>
-
-
+#include "server.h"
+#include "contest.h"
 
 int main(int argc, char *argv[])
 {
 
     QApplication a( argc, argv );
 
+    Contest *c = new Contest();
 
-    DashboardWindow dash;
+    DashboardWindow dash(nullptr, c);
+
     dash.show();
-
-    Server *server = new Server(8080, false);
-    QObject::connect(server, &Server::closed, &a, &QCoreApplication::quit);
+    Server s(c);
+    s.start();
 
     return a.exec();
+
+
 }

@@ -33,6 +33,8 @@ SOURCES += \
 HEADERS += \
     dashboardwindow.h \
     contest.h \
+    http.h \
+    crow.h \
     server.h
 
 FORMS += \
@@ -47,3 +49,17 @@ RESOURCES += \
     images.qrc
 
 ICON = app.icns
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/lib/release/ -lboost_thread-mt
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/lib/debug/ -lboost_thread-mt
+else:unix: LIBS += -L$$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/lib/ -lboost_thread-mt
+
+INCLUDEPATH += $$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/include
+DEPENDPATH += $$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/include
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/lib/release/ -lboost_system
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/lib/debug/ -lboost_system
+else:unix: LIBS += -L$$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/lib/ -lboost_system
+
+INCLUDEPATH += $$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/include
+DEPENDPATH += $$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/include

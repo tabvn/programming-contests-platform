@@ -24,7 +24,7 @@ QVariant getUserProblemScore(QVariant userId, QString problem){
 
     QSqlQuery q;
 
-    if (!q.prepare("select score, accepted, error from submissions where status=1 AND userId=:userId AND problem=:problem order by score desc limit 1")){
+    if (!q.prepare("select score, accepted, error from submissions where status=2 AND userId=:userId AND problem=:problem order by score desc limit 1")){
         qDebug() << q.lastError();
         return -1;
     }
@@ -265,14 +265,14 @@ void setupViews(Ui::DashboardWindow *ui, Contest *contest){
  * @param parent
  */
 
-DashboardWindow::DashboardWindow(QWidget *parent) :
+
+DashboardWindow::DashboardWindow(QWidget *parent, Contest *contest) :
     QMainWindow(parent),
     ui(new Ui::DashboardWindow)
 {
 
 
-
-    this->contest = new Contest();
+    this->contest = contest;
 
     ui->setupUi(this);
 
@@ -286,6 +286,31 @@ DashboardWindow::DashboardWindow(QWidget *parent) :
 
     ui->actionSave->setEnabled(false);
     ui->actionSave_as->setEnabled(false);
+
+    if(contest == nullptr){
+        return;
+    }
+
+
+
+    contest->subscribe("start", [&](QVariant data){
+
+        if(data == true){
+            ui->contestlabel->setText("Runing: " + contest->getIpAddress() + ":8080");
+            ui->contestlabel->setStyleSheet("QLabel { color : red; }");
+            ui->contestButton->setText("Stop");
+        }else{
+            ui->contestlabel->setText("Contest is stopped");
+            ui->contestlabel->setStyleSheet("QLabel { color : black; }");
+            ui->contestButton->setText("Start contest");
+        }
+
+    });
+
+
+
+
+
 
 }
 
@@ -345,7 +370,7 @@ void DashboardWindow::slotRemoveRecord()
 DashboardWindow::~DashboardWindow()
 {
     QSqlDatabase::removeDatabase(this->contest->filePath);
-
+    delete  contest;
     delete ui;
 }
 
@@ -504,7 +529,7 @@ void DashboardWindow::on_problemTextField_editingFinished()
        contest->selectedProblem->name = ui->problemTextField->text();
        this->contest->updateProblem(name, contest->selectedProblem);
 
-       if(index > 0){
+       if(index > -1){
            ui->problemComboBox->setItemText(index, contest->selectedProblem->name);
        }
 
@@ -718,12 +743,8 @@ void DashboardWindow::on_deleteTestCaseBtn_clicked()
         if(t != nullptr){
             t->remove();
         }
-
         contest->selectedProblem->selectedTest = nullptr;
-
     }
-
-
 
     if(row > -1){
         setupTestcaseTable(ui, contest);
@@ -733,6 +754,9 @@ void DashboardWindow::on_deleteTestCaseBtn_clicked()
             }else{
                 ui->testcaseTableWidget->setCurrentCell(row-1, 0);
             }
+        }else{
+            ui->inputTestCaseTextField->setPlainText("");
+            ui->outputTestCaseTextField->setPlainText("");
         }
     }
 
@@ -764,6 +788,7 @@ void DashboardWindow::on_testcaseTableWidget_cellChanged(int row, int column)
 
 void DashboardWindow::on_inputTestCaseTextField_textChanged()
 {
+
 
     if(contest->selectedProblem == nullptr){
         return ;
@@ -797,5 +822,17 @@ void DashboardWindow::on_outputTestCaseTextField_textChanged()
     if (!contest->selectedProblem->selectedTest->updateOutput(output)){
         QMessageBox::warning(this, "Error save test case", "An error saving testcase");
     }
+
+}
+
+void DashboardWindow::on_contestButton_clicked()
+{
+
+  contest->publish("start", !contest->started);
+  if(contest->started){
+    contest->stop();
+  }else{
+    contest->start();
+  }
 
 }

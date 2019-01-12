@@ -13,6 +13,15 @@
 #include <QFile>
 #include <QDir>
 #include <QtSql>
+#include <functional>
+#include <QtNetwork>
+#include <QUuid>
+
+struct Login{
+    qint64 id;
+    QString name;
+    QString token;
+};
 
 struct User{
 
@@ -261,6 +270,15 @@ struct Submission{
     QDateTime created;
 };
 
+
+struct Subscriber{
+    int id;
+    QString event;
+
+    //void(*callback)(QVariant arg);
+    std::function<void(QVariant arg)> callback;
+};
+
 struct Contest{
     static QString argument;
     QString filePath;
@@ -271,7 +289,10 @@ struct Contest{
     QVector<User> scoreboardUsers;
     QVector<Problem> problems;
     QVector<Submission> submissions;
+    QVector<Subscriber> subscribers;
     bool connected;
+    bool started = false;
+
 
 
     Contest(){
@@ -281,6 +302,64 @@ struct Contest{
         this->memoryPath = ":memory.db";
     }
 
+    void start(){
+      this->started = true;
+    }
+    void stop(){
+        this->started = false;
+    }
+    QString getIpAddress(){
+
+        foreach (const QHostAddress &address, QNetworkInterface::allAddresses()) {
+            if (address.protocol() == QAbstractSocket::IPv4Protocol && address != QHostAddress(QHostAddress::LocalHost))
+                 return  address.toString();
+        }
+
+
+        return "";
+
+    }
+
+    /**
+     * @brief Subscribe to an event
+     * @param event
+     */
+
+
+    //void(*callback)(void*),void* callback_arg
+    //void(*cb)(QString event, QVariant arg)
+
+    void subscribe(QString event,std::function<void(QVariant data)> cb){
+
+        Subscriber sub;
+        sub.id = this->subscribers.size();
+        sub.event = event;
+        sub.callback = cb;
+        this->subscribers.push_back(sub);
+    }
+
+
+    /**
+     * @brief Publish to an event with data
+     * @param event
+     * @param arg
+     */
+
+    void publish(QString event, QVariant data){
+
+        for (int i = 0; i < this->subscribers.size(); i++) {
+            if(this->subscribers[i].event == event){
+                this->subscribers[i].callback(data);
+            }
+        }
+    }
+
+
+    /**
+     * @brief Create new contest
+     * @param path
+     * @return
+     */
     bool createContest(QString path){
 
         QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
@@ -297,12 +376,16 @@ struct Contest{
         return true;
 
     }
+    /**
+     * @brief Setup schema when create new contest
+     * @return
+     */
     bool setupSchema(){
 
         QSqlQuery q;
 
-        if (!q.exec(QLatin1String("CREATE TABLE users (id PRIMARY KEY, className varchar(20), "
-                                  "firstname varchar(20), lastname varchar(20), email vachar(25) UNIQUE, password vachar(50), birthday INTEGER )"))){
+        if (!q.exec(QLatin1String("CREATE TABLE users (id INTEGER PRIMARY KEY, className varchar(20), "
+                                  "firstname varchar(20), lastname varchar(20), email vachar(25) UNIQUE, password vachar(50), birthday INTEGER, token vachar(50) )"))){
             return false;
         }
 
@@ -359,6 +442,16 @@ struct Contest{
 
             return false;
         }
+
+        q.prepare("update tests set problem=:problem where problem=:p");
+        q.bindValue(":p", name);
+        q.bindValue(":problem", p->name);
+        q.exec();
+
+        q.prepare("update submissions set problem=:problem where problem=:p");
+        q.bindValue(":p", name);
+        q.bindValue(":problem", p->name);
+        q.exec();
 
 
 
@@ -614,6 +707,11 @@ struct Contest{
             return false;
         }
 
+        /*q.prepare("update submissions set userId=:userId where userId=:id");
+        q.bindValue(":userId", user->id);
+        q.bindValue(":id", id);
+        q.exec();*/
+
         return true;
     }
 
@@ -659,12 +757,12 @@ struct Contest{
 
         if(_db.open()){
 
+
+
             qDebug() << _db.lastError();
             this->clear();
             return true;
         }
-
-       // QSqlDatabase::removeDatabase(path);
 
 
        return false;
@@ -688,6 +786,102 @@ struct Contest{
         if(!this->scoreboardUsers.empty()){
             this->scoreboardUsers.clear();
         }
+
+    }
+
+    void openDb(){
+
+
+        QSqlDatabase _db = QSqlDatabase::addDatabase("QSQLITE");
+
+         _db.setDatabaseName(this->filePath);
+
+         if(_db.isOpen()){
+             return;
+         }
+
+         if(_db.open()){
+             qDebug() << _db.lastError();
+             this->clear();
+
+         }
+
+
+
+
+    }
+
+    bool validateToken(QString token){
+
+        openDb();
+
+        QSqlQuery q;
+
+       if(!q.prepare("select count(*) from users where token=:token")){
+
+           return  false;
+       }
+       q.bindValue(":token", token);
+
+       if(!q.exec()){
+           return false;
+
+       }
+
+       while(q.next()){
+
+           if(q.value(0).toInt() > 0){
+                return true;
+           }
+       }
+
+
+
+        return false;
+
+    }
+
+    Login login(qint64 id, QString password){
+
+        openDb();
+
+        QSqlQuery q;
+
+        Login l;
+
+        if (!q.prepare("select firstname, lastname from users where id=:id AND password=:password")){
+            qDebug() << "Prepare error" << q.lastError();
+            return l;
+        }
+
+        q.bindValue(":id", id);
+        q.bindValue(":password", password);
+
+        if (!q.exec()){
+            return l;
+        }
+
+        while(q.next()){
+
+            l.id = id;
+            l.name = q.value(0).toString() + " " + q.value(1).toString();
+            l.token = QUuid::createUuid().toString().mid(1,36).toUpper();
+        }
+
+        if(!l.token.isEmpty()){
+            if (!q.prepare("update users set token=:token where id=:id")){
+                 l.token = "";
+            }
+
+            q.bindValue(":id", id);
+            q.bindValue(":token", l.token);
+            if(!q.exec()){
+                l.token = "";
+            }
+
+        }
+
+        return l;
 
     }
 

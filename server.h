@@ -1,36 +1,26 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <QtCore/QObject>
-#include <QtCore/QList>
-#include <QtCore/QByteArray>
+#include <QObject>
+#include <QWidget>
+#include <QThread>
+#include "http.h"
+#include "contest.h"
 
-QT_FORWARD_DECLARE_CLASS(QWebSocketServer)
-QT_FORWARD_DECLARE_CLASS(QWebSocket)
-
-class Server : public QObject
+class Server : public QThread
 {
-    Q_OBJECT
+
 public:
-    explicit Server(quint16 port, bool debug = false, QObject *parent = nullptr);
-    ~Server();
-
-Q_SIGNALS:
-    void closed();
-
-private Q_SLOTS:
-    void onNewConnection();
-    void processTextMessage(QString message);
-    void processBinaryMessage(QByteArray message);
-    void socketDisconnected();
-
+    Server(Contest* contest = nullptr);
 
 private:
-    QWebSocketServer *m_pWebSocketServer;
-    QList<QWebSocket *> m_clients;
 
-    bool m_debug;
+    Ued::Http *http;
+    Contest *contest;
 
+protected:
+
+    void run();
 };
 
-#endif //ECHOSERVER_H
+#endif // SERVER_H
