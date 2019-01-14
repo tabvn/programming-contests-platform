@@ -27,7 +27,8 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
     dashboardwindow.cpp \
-    server.cpp
+    server.cpp \
+    judge.cpp
 
 
 HEADERS += \
@@ -36,7 +37,8 @@ HEADERS += \
     http.h \
     crow.h \
     server.h \
-    json.h
+    json.h \
+    judge.h
 
 FORMS += \
     dashboardwindow.ui

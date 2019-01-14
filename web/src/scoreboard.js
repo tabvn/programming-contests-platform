@@ -5,7 +5,7 @@ export default class Scoreboard extends Component{
   getScore(problem, problems) {
 
 
-    let score = -1;
+    let score = '';
 
     for(let p in problems){
       if(problems[p].name === problem){

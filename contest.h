@@ -16,6 +16,7 @@
 #include <functional>
 #include <QtNetwork>
 #include <QUuid>
+#include <queue>
 
 struct Login{
     qint64 id;
@@ -295,6 +296,7 @@ struct Scoreboard{
 };
 
 struct Contest{
+
     static QString argument;
     QString filePath;
     QString memoryPath;
@@ -303,22 +305,20 @@ struct Contest{
     QVector<User> users;
     QVector<User> scoreboardUsers;
     QVector<Problem> problems;
-    QVector<Submission> submissions;
     QVector<Subscriber> subscribers;
     QVector<Scoreboard> scoreboards;
     bool connected;
     bool started = false;
     QSqlQuery *query = nullptr;
-
-
-
-
+    std::queue<Submission> submissionsQueue;
 
     Contest(){
 
         this->connected = false;
         this->shouldCreateSchema = true;
         this->memoryPath = ":memory.db";
+
+
     }
 
     void start(){
@@ -922,9 +922,6 @@ struct Contest{
         if(!this->users.isEmpty()){
             this->users.clear();
         }
-        if(!this->submissions.empty()){
-            this->submissions.clear();
-        }
 
         if(!this->scoreboardUsers.empty()){
             this->scoreboardUsers.clear();
@@ -984,7 +981,7 @@ struct Contest{
           return query->value(0).toInt();
        }
 
-        return false;
+        return 0;
     }
 
     bool solveProblem(Submission& s){
@@ -1025,13 +1022,63 @@ struct Contest{
 
         s.id = query->lastInsertId().toInt();
 
+        this->submissionsQueue.push(s); // save to queue
+
         return true;
     }
 
+    bool updateSubmission(Submission& s){
+
+        if(query == nullptr){
+            return false;
+        }
+
+
+        if(!query->prepare("update submissions set problem=:problem,accepted=:accepted,status=:status,error=:error,score=:score where id=:id")){
+
+           qDebug() << "Can not update submission";
+           return false;
+        }
+
+        query->bindValue(":id", s.id);
+        query->bindValue(":problem", s.problem);
+        query->bindValue(":accepted", s.accepted);
+        query->bindValue(":status", s.status);
+        query->bindValue(":error", s.error);
+        query->bindValue(":score", s.score);
+
+
+        if(!query->exec()){
+                qDebug() << "Can not save submission";
+            return false;
+        }
+
+
+        return true;
+    }
+
+
+    bool logout(QString token){
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return false;
+        }
+
+        if(query->prepare("update users set token=:t where token=:token")){
+            return false;
+
+        }
+
+        query->bindValue(":t", "");
+        query->bindValue(":token", token);
+
+        if(!query->exec()){
+            return false;
+        }
+
+        return true;
+    }
     Login login(qint64 id, QString password){
-
-
-
 
         Login l;
 
@@ -1080,19 +1127,21 @@ struct Contest{
 
     QVector<Submission> getSubmissions(){
 
-        this->submissions.clear();
+
+
+        QVector<Submission> submissions;
 
         if(this->query == nullptr){
             qDebug() << "Could not connected db";
-            return this->submissions;
+            return submissions;
         }
 
         if (!query->prepare("select id, userId, problem, code,score,accepted,error, status, created from submissions order by created desc")){
-            return this->submissions;
+            return submissions;
         }
 
         if(!query->exec()){
-            return this->submissions;
+            return submissions;
         }
 
         Submission s;
@@ -1109,13 +1158,56 @@ struct Contest{
             s.status = query->value(7).toInt();
             s.created = QDateTime::fromTime_t(query->value(8).toUInt());
 
-           this->submissions.push_back(s);
+           submissions.push_back(s);
         }
 
-        return this->submissions;
+        return submissions;
 
 
     }
+
+    QVector<Submission> getUserSubmissions(qint64 userId){
+
+        QVector<Submission> userSubmissions;
+        Submission s;
+
+        if(this->query == nullptr){
+            qDebug() << "Could not connected db";
+            return userSubmissions;
+        }
+
+        if (!query->prepare("select id, userId, problem, code,score,accepted,error, status, created from submissions where userId=:userId order by created desc")){
+            return userSubmissions;
+        }
+        query->bindValue(":userId", userId);
+
+        if(!query->exec()){
+            return userSubmissions;
+        }
+
+
+
+        while(query->next()){
+
+            s.id = query->value(0).toInt();
+            s.userId = query->value(1).toInt();
+            s.problem = query->value(2).toString();
+            s.code = query->value(3).toString();
+            s.score = query->value(4).toInt();
+            s.accepted = query->value(5).toInt();
+            s.error = query->value(6).toString();
+            s.status = query->value(7).toInt();
+            s.created = QDateTime::fromTime_t(query->value(8).toUInt());
+
+           userSubmissions.push_back(s);
+        }
+
+        return userSubmissions;
+
+
+    }
+
+
 
 
 };

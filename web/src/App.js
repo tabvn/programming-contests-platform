@@ -15,6 +15,32 @@ const Header = styled.div`
   flex-direction: row;
   align-items: center;
   padding: 0 20px;
+  button{
+    display: inline-block;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    border: 1px solid transparent;
+    border-top-color: transparent;
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    border-left-color: transparent;
+    padding: .125rem .55rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    &.primary-btn{
+      color: #fff;
+      background-color: #0069d9;
+      border-color: #0062cc;
+    }
+  }
 
 `
 
@@ -28,6 +54,7 @@ const Logo = styled.div`
 const Menu = styled.div`
     display: flex;
     flex-direction: row;
+    align-items: center;
 `
 
 const MenuItem = styled.div`
@@ -213,7 +240,7 @@ class App extends Component {
     user: service.user,
   }
 
-  componentDidMount () {
+  loadData = () => {
     service.get('api').then((res) => {
       this.setState({
         ...this.state,
@@ -223,11 +250,29 @@ class App extends Component {
       })
     }).catch((e) => {
 
-      this.setState({
-        ...this.state,
-        error: 'An error loading data'
-      })
+      if(e.response && e.response.status && e.response.status === 401){
+        this.setState({
+          page: 'login',
+          error: 'An error loading data'
+        })
+      }else{
+        this.setState({
+          error: 'An error loading data'
+        })
+      }
+
     })
+  }
+  componentDidMount () {
+    if (this.state.user) {
+      this.loadData();
+    } else {
+
+      this.setState({
+        page: 'login'
+      })
+    }
+
   }
 
   renderPage = () => {
@@ -253,9 +298,11 @@ class App extends Component {
         return (
           <Login onSubmit={(data) => {
             service.auth(data.id, data.password).then((user) => {
+              this.loadData();
               this.setState({
-                ...this.state,
-                user: user
+                error: null,
+                user: user,
+                page: 'scoreboard',
               })
             })
           }}/>
@@ -267,15 +314,28 @@ class App extends Component {
 
           service.solveProblem(data.problem, data.code).then((data) => {
 
+            let s = this.state.submissions;
+
+            s.push(data);
+
             this.setState({
               ...this.state,
-              submission: [...this.state.submissions, data]
+              submission: s,
             })
 
           }).catch((e) => {
-            this.setState({
-              error: 'Your submission could not be saved.'
-            })
+            if(e.response && e.response.status && e.response.status === 401){
+              this.setState({
+                page: 'login',
+                error: 'Your submission could not be saved.'
+              })
+
+            }else{
+              this.setState({
+                error: 'Your submission could not be saved.'
+              })
+            }
+
           })
 
         }} problem={this.state.selectedProblem}/>
@@ -297,7 +357,7 @@ class App extends Component {
       <div>
         <Header>
           <Logo>
-            Logo Name
+            Programming contests platform
           </Logo>
           <Menu>
             <MenuItem active={this.state.page === 'scoreboard'} onClick={() => {
@@ -314,6 +374,7 @@ class App extends Component {
 
             <MenuItem active={this.state.page === 'submissions'} onClick={() => {
               this.setState({
+
                 page: 'submissions'
               })
 
@@ -325,7 +386,19 @@ class App extends Component {
                 })
               }
 
-            }} className={'no-link'}>{this.state.user ? this.state.user.name : 'Login'}</MenuItem>
+            }} className={this.state.user ? 'no-link': 'has-link'}>{this.state.user ? this.state.user.name : 'Login'}</MenuItem>
+            {this.state.user ? <MenuItem>
+              <button onClick={() => {
+
+                this.setState({
+                  page: 'login',
+                  user: null,
+                }, () => {
+                  service.logout();
+                })
+
+              }}>Sign Out</button>
+            </MenuItem> : null }
           </Menu>
         </Header>
 

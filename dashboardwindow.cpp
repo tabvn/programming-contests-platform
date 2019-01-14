@@ -291,6 +291,11 @@ DashboardWindow::DashboardWindow(QWidget *parent, Contest *contest) :
     });
 
 
+    contest->subscribe("error", [&](QVariant message){
+
+        qDebug() << "An error" << message;
+    });
+
 
 
 
@@ -353,7 +358,8 @@ void DashboardWindow::slotRemoveRecord()
 DashboardWindow::~DashboardWindow()
 {
     QSqlDatabase::removeDatabase(this->contest->filePath);
-    delete  contest;
+
+    contest->publish("closeServer", true); // notify to http server close
     delete ui;
 }
 

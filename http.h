@@ -57,16 +57,15 @@ namespace Ued {
             this->started = true;
 
 
-
-
             router(app, "/")([&](const crow::request&, crow::response& res){
 
+                if(!contest->started){
+                    res.code = 400;
+                    res.write("Contest has not started yet");
+                    res.end();
 
-                crow::response response;
-
-                response.add_header("Access-Control-Allow-Origin", "http://localhost:3000");
-                response.add_header("Access-Control-Allow-Headers", "Content-Type");
-
+                    return;
+                }
 
                 QFile file(":/app/web.html.ts");
                 if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
@@ -114,7 +113,22 @@ namespace Ued {
             ([&](const crow::request& req, crow::response& res){
 
 
-                // this->auth(req, res);
+                res.set_header("Content-Type", "application/json");
+
+                std::string token = req.get_header_value("authorization");
+
+                if(token.empty()){
+                    this->Error(res, 401, "{\"error\": \"Access denied\"}");
+                    return;
+                }
+
+                int userId = contest->getUserIdFromToken(QString::fromStdString(token));
+
+                if(!userId){
+                    this->Error(res, 401, "{\"error\": \"Access denied\"}");
+                    return;
+                }
+
 
 
 
@@ -161,9 +175,32 @@ namespace Ued {
                 }
 
 
+                QVector<Submission> submissions = contest->getUserSubmissions(userId);
+
+                nlohmann::json submissionArr = nlohmann::json::array();
+                nlohmann::json submissionObj = nlohmann::json::object();
+
+
+
+
+                for (int i = 0; i < submissions.size(); i++) {
+                    submissionObj["id"] = submissions[i].id;
+                    submissionObj["userId"] = submissions[i].userId;
+                    submissionObj["problem"] = submissions[i].problem.toStdString();
+                    submissionObj["created"] = submissions[i].created.toTime_t();
+                    submissionObj["accepted"] = submissions[i].accepted;
+                    submissionObj["error"] = submissions[i].error.toStdString();
+                    submissionObj["code"] = submissions[i].code.toStdString();
+                    submissionObj["score"] = submissions[i].score;
+                    submissionObj["status"] = submissions[i].status;
+                    submissionArr.push_back(submissionObj);
+
+                }
+
+
                 body["problems"] = problemJsonArr;
                 body["scoreboard"] = scoreJsonArr;
-
+                body["submissions"] = submissionArr;
 
                 res.set_header("Content-Type", "application/json");
 
@@ -174,13 +211,32 @@ namespace Ued {
             });
 
 
+            router(app, "/api/logout")([&](const crow::request& req, crow::response& res){
+
+
+                std::string token = req.get_header_value("authorization");
+
+                res.set_header("Content-Type", "text/html; charset=utf-8");
+                if(token.empty()){
+                    this->Error(res, 401, "{\"error\": \"wrong token.\"}");
+                    return;
+                }
+
+                contest->logout(QString::fromStdString(token));
+
+                res.code = 200;
+                res.write("{\"message\": \"success.\"}");
+                res.end();
+
+
+
+            });
+
             router(app, "/api/login")
             .methods("OPTIONS"_method,"POST"_method)
             ([&](const crow::request& req, crow::response& res){
 
-
-                res.add_header("Access-Control-Allow-Origin", "*");
-                res.add_header("Access-Control-Allow-Headers", "Content-Type");
+                res.set_header("Content-Type", "application/json");
 
                 auto x = crow::json::load(req.body);
 
@@ -188,14 +244,14 @@ namespace Ued {
                 QString password = QString::fromStdString(x["password"].s());
 
                 if(!id || password.isEmpty()){
-                    this->Error(res, 401, "Login wrong.");
+                    this->Error(res, 401, "{\"error\": \"id & password is required.\"}");
                     return ;
                 }
 
                 Login login = this->contest->login(id, password);
 
                 if(login.token.isEmpty()){
-                    this->Error(res, 401, "Login wrong.");
+                    this->Error(res, 401, "{\"error\": \"Wrong id or password\"}");
                     return;
                 }
 
@@ -205,7 +261,7 @@ namespace Ued {
                 user["token"] = login.token.toStdString();
 
 
-                res.set_header("Content-Type", "application/json");
+
                 res.write(user.dump());
                 res.end();
 
@@ -219,17 +275,21 @@ namespace Ued {
 
                 res.set_header("Content-Type", "application/json");
 
+                if(!contest->started){
+                    this->Error(res, 400, "{\"error\": \"Contest has not started yet.\"}");
+                    return;
+                }
                 std::string token = req.get_header_value("authorization");
 
                 if(token.empty()){
-                    this->Error(res, 400, "{\"error\": \"Access denied\"}");
+                    this->Error(res, 401, "{\"error\": \"Access denied\"}");
                     return;
                 }
 
                 int userId = contest->getUserIdFromToken(QString::fromStdString(token));
 
                 if(!userId){
-                    this->Error(res, 400, "{\"error\": \"Access denied\"}");
+                    this->Error(res, 401, "{\"error\": \"Access denied\"}");
                     return;
                 }
 
@@ -244,6 +304,8 @@ namespace Ued {
                 }
 
                 Submission s;
+
+                s.userId = userId;
                 s.code = code;
                 s.problem = problem;
                 s.created = QDateTime::currentDateTime();
@@ -266,6 +328,7 @@ namespace Ued {
                 body["status"] = 0;
                 body["code"] = code.toStdString();
                 body["score"] = 0;
+                body["created"] = s.created.toTime_t();
 
                 res.write(body.dump());
                 res.end();

@@ -1,10 +1,8 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <QObject>
-#include <QWidget>
-#include <QThread>
 #include "http.h"
+#include <QThread>
 #include "contest.h"
 
 class Server : public QThread

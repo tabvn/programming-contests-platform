@@ -7,6 +7,7 @@
 #include <QtDebug>
 #include "server.h"
 #include "contest.h"
+#include "judge.h"
 
 int main(int argc, char *argv[])
 {
@@ -21,6 +22,9 @@ int main(int argc, char *argv[])
 
     Server s(c);
     s.start();
+
+    Judge j(c);
+    j.start();
 
 
     return a.exec();
