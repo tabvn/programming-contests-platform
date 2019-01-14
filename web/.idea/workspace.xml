@@ -1,22 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3b068a88-266f-447e-b145-99d46d6d56c5" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../files.qrc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../json.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../web.html.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../web.js.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/scoreboard.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../app.icns" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../contest.h" beforeDir="false" afterPath="$PROJECT_DIR$/../contest.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dashboardwindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dashboardwindow.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../http.h" beforeDir="false" afterPath="$PROJECT_DIR$/../http.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../images.qrc" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../server.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ued_dng.pro" beforeDir="false" afterPath="$PROJECT_DIR$/../ued_dng.pro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ued_dng.pro.user" beforeDir="false" afterPath="$PROJECT_DIR$/../ued_dng.pro.user" afterDir="false" />
-    </list>
+    <list default="true" id="3b068a88-266f-447e-b145-99d46d6d56c5" name="Default Changelist" comment="" />
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
     <ignored path="$PROJECT_DIR$/tmp/" />
@@ -192,18 +177,17 @@
       <workItem from="1547355813694" duration="6807000" />
       <workItem from="1547366304361" duration="3331000" />
       <workItem from="1547437745399" duration="4238000" />
-      <workItem from="1547449371799" duration="889000" />
+      <workItem from="1547449371799" duration="1059000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="15265000" />
+    <option name="totallyTimeSpent" value="15435000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1680" height="982" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24954791" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24954791" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="npm" order="2" side_tool="true" />
       <window_info id="Favorites" order="3" side_tool="true" />
@@ -217,7 +201,7 @@
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="10" visible="true" weight="0.21460675" />
+      <window_info anchor="bottom" id="Terminal" order="10" visible="true" weight="0.21460675" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
