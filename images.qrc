@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>ued.png</file>
-        <file>app.icns</file>
-    </qresource>
-</RCC>

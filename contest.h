@@ -260,13 +260,14 @@ struct Problem {
 };
 
 struct Submission{
+    qint64 id;
     qint64 userId;
     QString problem;
     int score;
     QString code;
-    QString status;
-    QString error;
+    int status;
     int accepted;
+    QString error;
     QDateTime created;
 };
 
@@ -277,6 +278,20 @@ struct Subscriber{
 
     //void(*callback)(QVariant arg);
     std::function<void(QVariant arg)> callback;
+};
+
+struct ProblemScore{
+    QString name;
+    int score;
+};
+
+struct Scoreboard{
+
+      QString name;
+      int uesrId;
+      int total;
+      QVector<ProblemScore> problems;
+
 };
 
 struct Contest{
@@ -290,8 +305,12 @@ struct Contest{
     QVector<Problem> problems;
     QVector<Submission> submissions;
     QVector<Subscriber> subscribers;
+    QVector<Scoreboard> scoreboards;
     bool connected;
     bool started = false;
+    QSqlQuery *query = nullptr;
+
+
 
 
 
@@ -373,6 +392,11 @@ struct Contest{
             return false;
         }
 
+        if(this->query != nullptr){
+            delete this->query;
+        }
+        this->query = new QSqlQuery(db);
+
         return true;
 
     }
@@ -403,7 +427,7 @@ struct Contest{
         }
 
         if (!q.exec(QLatin1String("CREATE TABLE submissions (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, "
-                                 "problem vachar(50), code CLOB, score INTEGER, accepted INTEGER, error TEXT , status varchar(20), created INTEGER, "
+                                 "problem vachar(50), code CLOB, score INTEGER, accepted INTEGER, error TEXT , status int, created INTEGER, "
                                   "FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE, FOREIGN KEY(problem) REFERENCES problems(name) ON DELETE CASCADE)"))){
             return false;
         }
@@ -422,7 +446,12 @@ struct Contest{
     }
 
     bool updateProblem(QString name, Problem *p){
-         QSqlQuery q;
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+           return false;
+        }
+        QSqlQuery q = *this->query;
+
 
         if(!q.prepare("update problems set name=:newName, description=:description, fileType=:fileType, file =:file, maxScore=:maxScore, timeLimit=:timeLimit, memoryLimit=:memoryLimit WHERE name=:name")){
 
@@ -460,7 +489,12 @@ struct Contest{
 
     bool deleteProblem(Problem *p){
 
-    QSqlQuery q;
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return false;
+        }
+        QSqlQuery q = *this->query;
+
         if(!q.prepare("delete from problems where name =:name")){
             return false;
         }
@@ -494,7 +528,13 @@ struct Contest{
     }
 
     bool addProblem(Problem p){
-        QSqlQuery q;
+
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return false;
+        }
+        QSqlQuery q = *this->query;
+
 
 
         if (!q.prepare("insert into problems (name, description, maxScore, timeLimit, memoryLimit) values(:name, :description, :maxScore, :timeLimit, :memoryLimit)")){
@@ -520,36 +560,50 @@ struct Contest{
     }
     QVector<Problem> getProblems(){
 
+        this->problems.clear();
 
-        QSqlQuery q;
-        if(this->problems.empty()){
-            if(!q.prepare("select name, description,maxScore, timeLimit, memoryLimit from problems where name is not null order by name asc")){
-                qDebug() << q.lastError();
-                return this->problems;
-            }
-
-            if(!q.exec()){
-                qDebug() << q.lastError();
-                return this->problems;
-            }
-
-            while(q.next()){
-                Problem p;
-                p.name =  q.value(0).toString();
-                p.description = q.value(1).toString();
-                p.maxScore = q.value(2).toInt();
-                p.timeLimit = q.value(3).toInt();
-                p.memoryLimit = q.value(4).toInt();
-
-                this->problems.push_back(p);
-            }
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return this->problems;
         }
+
+        QSqlQuery q = *this->query;
+
+
+
+        if(!q.prepare("select name, description,maxScore, timeLimit, memoryLimit from problems where name is not null order by name asc")){
+            qDebug() << q.lastError();
+            return this->problems;
+        }
+
+        if(!q.exec()){
+            qDebug() << q.lastError();
+            return this->problems;
+        }
+
+        while(q.next()){
+            Problem p;
+            p.name =  q.value(0).toString();
+            p.description = q.value(1).toString();
+            p.maxScore = q.value(2).toInt();
+            p.timeLimit = q.value(3).toInt();
+            p.memoryLimit = q.value(4).toInt();
+
+            this->problems.push_back(p);
+        }
+
+
         return this->problems;
     }
     QVector<User> getUsers(){
 
 
-        QSqlQuery q;
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return this->users;
+        }
+        QSqlQuery q = *this->query;
+
 
         if(this->users.empty()){
 
@@ -581,38 +635,106 @@ struct Contest{
     QVector<User> getScoreboardUsers(){
         User u;
 
+        this->scoreboardUsers.clear();
 
-        QSqlQuery q;
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return this->scoreboardUsers;
+        }
+        QSqlQuery q = *this->query;
 
-        if(this->scoreboardUsers.empty()){
 
-            if(!q.prepare("SELECT u.id, u.firstname, u.lastname, u.className, u.birthday, u.email, u.password FROM users as u inner join submissions as s ON s.userId = u.id  order by firstname asc")){
-                return this->scoreboardUsers;
-            }
-            if (!q.exec()){
-                return this->scoreboardUsers;
-            }
+        if(!q.prepare("SELECT u.id, u.firstname, u.lastname, u.className, u.birthday FROM users as u where u.id in (select userId from submissions)  order by firstname asc")){
+            return this->scoreboardUsers;
+        }
+        if (!q.exec()){
+            return this->scoreboardUsers;
+        }
 
-            while (q.next()) {
-                u.id = q.value(0).toInt();
-                u.firstname = q.value(1).toString();
-                u.lastname = q.value(2).toString();
-                u.className = q.value(3).toString();
-                u.birthday = QDateTime::fromTime_t(q.value(4).toUInt());
-                u.email = q.value(5).toString();
-                u.password = q.value(6).toString();
+        while (q.next()) {
+            u.id = q.value(0).toInt();
+            u.firstname = q.value(1).toString();
+            u.lastname = q.value(2).toString();
+            u.className = q.value(3).toString();
+            u.birthday = QDateTime::fromTime_t(q.value(4).toUInt());
 
-                this->scoreboardUsers.push_back(u);
-            }
+            this->scoreboardUsers.push_back(u);
         }
 
         return this->scoreboardUsers;
     }
 
+    QVariant getUserProblemScore(QVariant userId, QString problem){
+
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return -1;
+        }
+        QSqlQuery q = *this->query;
+
+
+        if (!q.prepare("select score, accepted, error from submissions where status=2 AND userId=:userId AND problem=:problem order by score desc limit 1")){
+            qDebug() << q.lastError();
+            return -1;
+        }
+        q.bindValue(":userId", userId.toInt());
+        q.bindValue(":problem", problem);
+
+        if(!q.exec()){
+            qDebug() << q.lastError();
+            return -1;
+        }
+        while(q.next()){
+            return q.value(0);
+        }
+        return -1;
+    }
+
+
+    QVector<Scoreboard> getScoreboards(){
+
+        Scoreboard s;
+        ProblemScore p;
+        int total = 0;
+
+        this->scoreboards.clear();
+        QVector<User> scoreUsers = this->getScoreboardUsers();
+        QVector<Problem> plist = this->getProblems();
+
+        for (int i = 0; i < scoreUsers.size(); i++) {
+
+            s.name = scoreUsers[i].lastname + " " + scoreUsers[i].firstname;
+
+            s.problems.clear();
+            total = 0;
+
+            for (int j = 0; j < plist.size(); j++) {
+                p.name = plist[j].name;
+                p.score = this->getUserProblemScore(scoreUsers[i].id, plist[j].name).toInt();
+                s.problems.push_back(p);
+                if(p.score > 0){
+                    total += p.score;
+                }
+            }
+
+            s.total = total;
+            this->scoreboards.push_back(s);
+
+        }
+
+        return this->scoreboards;
+    }
+
+
+
     bool addUser(User *user){
 
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return false;
+        }
+        QSqlQuery q = *this->query;
 
-        QSqlQuery q;
         if(!user->id || user->id == 0){
             return false;
         }
@@ -638,7 +760,11 @@ struct Contest{
 
     bool removeUser(User *user){
 
-        QSqlQuery q;
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return false;
+        }
+        QSqlQuery q = *this->query;
 
         if(!q.prepare("delete from users where id=:id")){
             return false;
@@ -655,7 +781,11 @@ struct Contest{
 
     bool addTestCase(Test *t){
 
-        QSqlQuery q;
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return false;
+        }
+        QSqlQuery q = *this->query;
 
         if(this->selectedProblem == nullptr){
             return false;
@@ -684,7 +814,13 @@ struct Contest{
 
 
     bool updateUser(qint64 id, User *user){
-        QSqlQuery q;
+
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return false;
+        }
+        QSqlQuery q = *this->query;
+
         if(!user->id || user->id == 0 || !id || id == 0){
             return false;
         }
@@ -755,14 +891,21 @@ struct Contest{
 
         _db.setDatabaseName(this->filePath);
 
+        if(_db.isOpen()){
+            return true;
+        }
         if(_db.open()){
 
+            if(this->query != nullptr){
+                delete this->query;
+            }
 
+            this->query = new QSqlQuery(_db);
 
-            qDebug() << _db.lastError();
             this->clear();
             return true;
         }
+
 
 
        return false;
@@ -789,48 +932,28 @@ struct Contest{
 
     }
 
-    void openDb(){
 
-
-        QSqlDatabase _db = QSqlDatabase::addDatabase("QSQLITE");
-
-         _db.setDatabaseName(this->filePath);
-
-         if(_db.isOpen()){
-             return;
-         }
-
-         if(_db.open()){
-             qDebug() << _db.lastError();
-             this->clear();
-
-         }
-
-
-
-
-    }
 
     bool validateToken(QString token){
 
-        openDb();
 
-        QSqlQuery q;
-
-       if(!q.prepare("select count(*) from users where token=:token")){
+        if(query == nullptr){
+            return false;
+        }
+       if(!query->prepare("select count(*) from users where token=:token")){
 
            return  false;
        }
-       q.bindValue(":token", token);
+       query->bindValue(":token", token);
 
-       if(!q.exec()){
+       if(!query->exec()){
            return false;
 
        }
 
-       while(q.next()){
+       while(query->next()){
 
-           if(q.value(0).toInt() > 0){
+           if(query->value(0).toInt() > 0){
                 return true;
            }
        }
@@ -841,13 +964,83 @@ struct Contest{
 
     }
 
+    int getUserIdFromToken(QString token){
+
+        if(query == nullptr){
+            return 0;
+        }
+       if(!query->prepare("select id from users where token=:token limit 1")){
+
+           return  0;
+       }
+       query->bindValue(":token", token);
+
+       if(!query->exec()){
+           return 0;
+
+       }
+
+       while(query->next()){
+          return query->value(0).toInt();
+       }
+
+        return false;
+    }
+
+    bool solveProblem(Submission& s){
+
+        if(query == nullptr){
+            return false;
+        }
+
+        if(!this->query->prepare("select count(*) from problems where name=:problem limit 1")){
+            return false;
+        }
+
+        query->bindValue(":problem", s.problem);
+        if(!query->exec()){
+            return false;
+        }
+
+        while(query->next()){
+            if(query->value(0) == 0){
+                return false;
+            }
+        }
+
+        if(!query->prepare("insert into submissions (userId, problem,code,accepted,status,created) values(:userId, :problem, :code, :accepted, :status, :created)")){
+            return 0;
+        }
+
+        query->bindValue(":userId", s.userId);
+        query->bindValue(":problem", s.problem);
+        query->bindValue(":accepted", s.accepted);
+        query->bindValue(":status", s.status);
+        query->bindValue(":created", s.created.toTime_t());
+        query->bindValue(":code", s.code);
+
+        if(!query->exec()){
+            return false;
+        }
+
+        s.id = query->lastInsertId().toInt();
+
+        return true;
+    }
+
     Login login(qint64 id, QString password){
 
-        openDb();
 
-        QSqlQuery q;
+
 
         Login l;
+
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return l;
+        }
+        QSqlQuery q = *this->query;
+
 
         if (!q.prepare("select firstname, lastname from users where id=:id AND password=:password")){
             qDebug() << "Prepare error" << q.lastError();
@@ -882,6 +1075,45 @@ struct Contest{
         }
 
         return l;
+
+    }
+
+    QVector<Submission> getSubmissions(){
+
+        this->submissions.clear();
+
+        if(this->query == nullptr){
+            qDebug() << "Could not connected db";
+            return this->submissions;
+        }
+
+        if (!query->prepare("select id, userId, problem, code,score,accepted,error, status, created from submissions order by created desc")){
+            return this->submissions;
+        }
+
+        if(!query->exec()){
+            return this->submissions;
+        }
+
+        Submission s;
+
+        while(query->next()){
+
+            s.id = query->value(0).toInt();
+            s.userId = query->value(1).toInt();
+            s.problem = query->value(2).toString();
+            s.code = query->value(3).toString();
+            s.score = query->value(4).toInt();
+            s.accepted = query->value(5).toInt();
+            s.error = query->value(6).toString();
+            s.status = query->value(7).toInt();
+            s.created = QDateTime::fromTime_t(query->value(8).toUInt());
+
+           this->submissions.push_back(s);
+        }
+
+        return this->submissions;
+
 
     }
 

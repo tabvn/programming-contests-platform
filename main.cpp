@@ -15,11 +15,13 @@ int main(int argc, char *argv[])
 
     Contest *c = new Contest();
 
-    DashboardWindow dash(nullptr, c);
 
+    DashboardWindow dash(nullptr, c);
     dash.show();
+
     Server s(c);
     s.start();
+
 
     return a.exec();
 

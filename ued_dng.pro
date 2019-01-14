@@ -35,7 +35,8 @@ HEADERS += \
     contest.h \
     http.h \
     crow.h \
-    server.h
+    server.h \
+    json.h
 
 FORMS += \
     dashboardwindow.ui
@@ -45,10 +46,7 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-RESOURCES += \
-    images.qrc
 
-ICON = app.icns
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/lib/release/ -lboost_thread-mt
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/lib/debug/ -lboost_thread-mt
@@ -63,3 +61,9 @@ else:unix: LIBS += -L$$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/lib/ -lbo
 
 INCLUDEPATH += $$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/include
 DEPENDPATH += $$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/include
+
+DISTFILES +=
+
+RESOURCES += files.qrc
+ICON = app.icns
+

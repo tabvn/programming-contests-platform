@@ -19,27 +19,6 @@
  */
 
 
-QVariant getUserProblemScore(QVariant userId, QString problem){
-
-
-    QSqlQuery q;
-
-    if (!q.prepare("select score, accepted, error from submissions where status=2 AND userId=:userId AND problem=:problem order by score desc limit 1")){
-        qDebug() << q.lastError();
-        return -1;
-    }
-    q.bindValue(":userId", userId.toInt());
-    q.bindValue(":problem", problem);
-
-    if(!q.exec()){
-        qDebug() << q.lastError();
-        return -1;
-    }
-    while(q.next()){
-        return q.value(0);
-    }
-    return -1;
-}
 
 /**
  * Setup table view for scoreboard
@@ -57,6 +36,9 @@ void setupScoreTableView(QTableWidget *table, Contest *contest){
     QVector<Problem> problems = contest->getProblems();
     QString problemName;
 
+    for (int i = 0; i<problems.size(); i++) {
+        headers.append(problems[i].name);
+    }
     User user;
 
     headers.append("Score");
@@ -85,7 +67,7 @@ void setupScoreTableView(QTableWidget *table, Contest *contest){
             score = 0;
             for (int i = 0; i < problems.size(); i++) {
 
-               userProblemScore = getUserProblemScore(user.id, problems[i].name);
+               userProblemScore = contest->getUserProblemScore(user.id, problems[i].name);
 
                if(userProblemScore.toInt() > 0){
                    score += userProblemScore.toInt();
@@ -292,14 +274,15 @@ DashboardWindow::DashboardWindow(QWidget *parent, Contest *contest) :
     }
 
 
-
     contest->subscribe("start", [&](QVariant data){
 
         if(data == true){
+            this->contest->started = true;
             ui->contestlabel->setText("Runing: " + contest->getIpAddress() + ":8080");
             ui->contestlabel->setStyleSheet("QLabel { color : red; }");
             ui->contestButton->setText("Stop");
         }else{
+            this->contest->started = false;
             ui->contestlabel->setText("Contest is stopped");
             ui->contestlabel->setStyleSheet("QLabel { color : black; }");
             ui->contestButton->setText("Start contest");
@@ -828,11 +811,16 @@ void DashboardWindow::on_outputTestCaseTextField_textChanged()
 void DashboardWindow::on_contestButton_clicked()
 {
 
-  contest->publish("start", !contest->started);
-  if(contest->started){
+
+    bool started = contest->started;
+
+    if(contest->started){
     contest->stop();
-  }else{
+
+    }else{
     contest->start();
-  }
+    }
+    contest->publish("start", !started);
+
 
 }

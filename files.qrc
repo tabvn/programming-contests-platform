@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/app">
+        <file>web.js.ts</file>
+        <file>ued.png</file>
+        <file>web.html.ts</file>
+    </qresource>
+</RCC>
