@@ -15,7 +15,14 @@ void Judge::run()
 
         if(!contest->submissionsQueue.empty()){
             s = contest->submissionsQueue.front();
-            qDebug() << "Processing submission" << s.problem << s.id;
+            Problem p = contest->getProblem(s.problem);
+
+            int timeLimit = 1000;
+            if(p.timeLimit > 0 ){
+               timeLimit = p.timeLimit *1000;
+            }
+
+            qDebug() << "Processing submission" << s.problem << s.id << "Problem:" << p.name;
             // do job
             QString dir = "/Users/toan/Desktop/ued/"+QString::number(s.userId) + "_"+QString::number(s.id);
             if (!QDir(dir).exists()){
@@ -44,7 +51,8 @@ void Judge::run()
 
             QProcess builder;
             builder.setProcessChannelMode(QProcess::MergedChannels);
-            builder.start("g++ " + filename + " -o " +  dir + "/"+ s.problem);
+            QString programePath = dir + "/"+ s.problem;
+            builder.start("g++ " + filename + " -o " +  programePath);
 
             if (!builder.waitForFinished()){
                 s.error = "Complie error.";
@@ -58,10 +66,94 @@ void Judge::run()
             }else{
 
                 QString err = builder.readAll();
+
                 qDebug() << "complie with erro" << err << err.isEmpty();
 
+
+
                 if(err.isEmpty()){
+
                     // continue run test
+                        QVector<Test> tests = this->contest->getTestsByProblem(p.name);
+
+                        int totalScore = 0;
+                        int maxScore = p.maxScore;
+                        int totalStrength = 0;
+
+                        for (int i = 0; i < tests.size(); i++) {
+                            totalStrength += tests[i].strength;
+                        }
+
+                        for (int i =0;i< tests.size(); i++) {
+                            qDebug() << "Running on test " << i;
+
+                            QProcess runExec;
+                            runExec.start(programePath);
+                            if (!runExec.waitForStarted(2000)){
+                                  qDebug() << "Program has not started on test " << i;
+                                  s.error = "Running error.";
+                                  s.accepted = 0;
+                                  s.status = 2;
+
+                                  break;
+
+
+                            }else{
+                                qDebug() << "Send input:" << QByteArray::fromStdString(tests[i].input.toStdString()) << tests[i].input;
+                                runExec.write(QByteArray::fromStdString(tests[i].input.toStdString()));
+
+                                runExec.closeWriteChannel();
+
+                                if (!runExec.waitForFinished(timeLimit)){
+
+                                    qDebug() << "Error running on test: timout limit excecution" << i;
+                                    s.error = "Time limit execution on test #"+QString::number(i);
+                                    s.accepted = 0;
+                                    s.status = 2;
+
+                                    break;
+
+                                }else{
+
+                                    QByteArray result = runExec.readAll();
+
+                                    // xoa dau xong la khong trong va cuoi la khoang trong. hay xuong dong.
+                                    if(!result.isEmpty() && (result[result.size()-1] == '\n' || result[result.size()-1] == ' ')){
+                                        result.remove(result.size()-1,1);
+                                    }
+                                    if(!result.isEmpty() && (result[0] == '\n' || result[0] == ' ')){
+                                        result.remove(0,1);
+                                    }
+
+                                    qDebug() << "Result:" << result << "Output expect:" << tests[i].output << " is matched:" << (result == tests[i].output);
+
+                                    runExec.close();
+                                    if(result == tests[i].output){
+                                        // calculate score ....
+                                        totalScore += tests[i].strength * maxScore / totalStrength;
+
+                                    }else{
+                                        s.error = "Wrong answer on test #" + QString::number(i);
+                                        s.accepted = 0;
+                                        s.status = 2;
+                                        break;
+
+                                    }
+
+
+                                }
+
+                            }
+
+
+                        }
+
+                        if(s.error.isEmpty() || s.error.isNull()){
+                            s.accepted = 1;
+                        }
+                        s.score = totalScore;
+                        contest->updateSubmission(s);
+
 
                 }else{
                     s.error = "Complie error.";

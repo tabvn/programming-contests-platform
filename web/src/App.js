@@ -250,12 +250,12 @@ class App extends Component {
       })
     }).catch((e) => {
 
-      if(e.response && e.response.status && e.response.status === 401){
+      if (e.response && e.response.status && e.response.status === 401) {
         this.setState({
           page: 'login',
           error: 'An error loading data'
         })
-      }else{
+      } else {
         this.setState({
           error: 'An error loading data'
         })
@@ -263,9 +263,10 @@ class App extends Component {
 
     })
   }
+
   componentDidMount () {
     if (this.state.user) {
-      this.loadData();
+      this.loadData()
     } else {
 
       this.setState({
@@ -298,11 +299,20 @@ class App extends Component {
         return (
           <Login onSubmit={(data) => {
             service.auth(data.id, data.password).then((user) => {
-              this.loadData();
+              this.loadData()
               this.setState({
                 error: null,
                 user: user,
                 page: 'scoreboard',
+              })
+            }).catch((e) => {
+              let msg = 'Login error'
+
+              if (e.response && e.response.data && e.response.data.message) {
+                msg = e.response.data.message
+              }
+              this.setState({
+                error: msg,
               })
             })
           }}/>
@@ -314,23 +324,23 @@ class App extends Component {
 
           service.solveProblem(data.problem, data.code).then((data) => {
 
-            let s = this.state.submissions;
+            let s = this.state.submissions
 
-            s.push(data);
+            s.push(data)
 
             this.setState({
-              ...this.state,
+              page: 'submissions',
               submission: s,
             })
 
           }).catch((e) => {
-            if(e.response && e.response.status && e.response.status === 401){
+            if (e.response && e.response.status && e.response.status === 401) {
               this.setState({
                 page: 'login',
                 error: 'Your submission could not be saved.'
               })
 
-            }else{
+            } else {
               this.setState({
                 error: 'Your submission could not be saved.'
               })
@@ -379,14 +389,17 @@ class App extends Component {
               })
 
             }}>Submissions</MenuItem>
-            <MenuItem active={this.state.page === 'login'} onClick={() => {
-              if (!user) {
-                this.setState({
-                  page: 'login'
-                })
-              }
+            <MenuItem
+              active={this.state.page === 'login'}
+              onClick={() => {
+                if (!user) {
+                  this.setState({
+                    page: 'login'
+                  })
+                }
 
-            }} className={this.state.user ? 'no-link': 'has-link'}>{this.state.user ? this.state.user.name : 'Login'}</MenuItem>
+              }}
+              className={this.state.user ? 'no-link' : 'has-link'}>{this.state.user ? this.state.user.name : 'Login'}</MenuItem>
             {this.state.user ? <MenuItem>
               <button onClick={() => {
 
@@ -394,11 +407,12 @@ class App extends Component {
                   page: 'login',
                   user: null,
                 }, () => {
-                  service.logout();
+                  service.logout()
                 })
 
-              }}>Sign Out</button>
-            </MenuItem> : null }
+              }}>Sign Out
+              </button>
+            </MenuItem> : null}
           </Menu>
         </Header>
 

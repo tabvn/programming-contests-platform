@@ -2,21 +2,17 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="3b068a88-266f-447e-b145-99d46d6d56c5" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../judge.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../judge.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../submissionviewdialog.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../submissionviewdialog.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../submissionviewdialog.ui" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../contest.h" beforeDir="false" afterPath="$PROJECT_DIR$/../contest.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../dashboardwindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dashboardwindow.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../http.h" beforeDir="false" afterPath="$PROJECT_DIR$/../http.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../server.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server.h" beforeDir="false" afterPath="$PROJECT_DIR$/../server.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dashboardwindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/../dashboardwindow.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dashboardwindow.ui" beforeDir="false" afterPath="$PROJECT_DIR$/../dashboardwindow.ui" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../ued_dng.pro" beforeDir="false" afterPath="$PROJECT_DIR$/../ued_dng.pro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../web.html.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../web.html.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../web.js.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../web.js.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ued_dng.pro.user" beforeDir="false" afterPath="$PROJECT_DIR$/../ued_dng.pro.user" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/scoreboard.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/scoreboard.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/service.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/service.js" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -29,11 +25,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/App.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="297">
-              <caret line="301" column="29" selection-start-line="301" selection-start-column="29" selection-end-line="301" selection-end-column="29" />
+            <state relative-caret-position="260">
+              <caret line="333" column="14" lean-forward="true" selection-start-line="333" selection-start-column="14" selection-end-line="333" selection-end-column="14" />
               <folding>
                 <element signature="e#0#40#0" expanded="true" />
               </folding>
@@ -41,10 +37,10 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/problems.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17">
+            <state relative-caret-position="-151">
               <caret line="2" selection-start-line="2" selection-end-line="2" />
               <folding>
                 <element signature="e#0#25#0" expanded="true" />
@@ -90,6 +86,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -105,12 +102,6 @@
             <path>
               <item name="web" type="b2602c69:ProjectViewProjectNode" />
               <item name="web" type="462c0819:PsiDirectoryNode" />
-              <item name="build" type="462c0819:PsiDirectoryNode" />
-              <item name="static" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="web" type="b2602c69:ProjectViewProjectNode" />
-              <item name="web" type="462c0819:PsiDirectoryNode" />
               <item name="public" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -122,7 +113,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -161,17 +151,18 @@
       <workItem from="1547355813694" duration="6807000" />
       <workItem from="1547366304361" duration="3331000" />
       <workItem from="1547437745399" duration="4238000" />
-      <workItem from="1547449371799" duration="4932000" />
+      <workItem from="1547449371799" duration="5116000" />
+      <workItem from="1547526975875" duration="1049000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="19308000" />
+    <option name="totallyTimeSpent" value="20541000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1680" height="982" extended-state="0" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24954791" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24954791" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="npm" order="2" side_tool="true" />
       <window_info id="Favorites" order="3" side_tool="true" />
@@ -185,7 +176,7 @@
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
-      <window_info anchor="bottom" id="Terminal" order="10" visible="true" weight="0.21460675" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="10" visible="true" weight="0.21460675" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -215,20 +206,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/build/static/js/main.1645b273.chunk.js" />
     <entry file="file://$PROJECT_DIR$/build/static/js/main.b465e737.chunk.js" />
-    <entry file="file://$PROJECT_DIR$/build/static/js/1.5fc74a5d.chunk.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret column="4278" lean-forward="true" selection-end-line="1" selection-end-column="44" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/build/static/js/main.90257eb7.chunk.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="1" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/build/static/js/1.5fc74a5d.chunk.js" />
+    <entry file="file://$PROJECT_DIR$/build/static/js/main.90257eb7.chunk.js" />
     <entry file="file://$PROJECT_DIR$/src/view-problem.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="272">
@@ -253,34 +232,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/build/static/js/1.f97ca707.chunk.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret column="1127" lean-forward="true" selection-end-line="1" selection-end-column="44" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/build/static/js/main.1ea039bd.chunk.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="1" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/build/static/js/1.45c3d508.chunk.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="1" selection-end-column="44" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/build/static/js/main.495a2ecd.chunk.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="1" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/build/static/js/1.f97ca707.chunk.js" />
+    <entry file="file://$PROJECT_DIR$/build/static/js/main.1ea039bd.chunk.js" />
+    <entry file="file://$PROJECT_DIR$/build/static/js/1.45c3d508.chunk.js" />
+    <entry file="file://$PROJECT_DIR$/build/static/js/main.495a2ecd.chunk.js" />
     <entry file="file://$PROJECT_DIR$/build/static/js/1.ff592fda.chunk.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="238">
@@ -337,22 +292,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/App.js">
+    <entry file="file://$PROJECT_DIR$/src/problems.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="297">
-          <caret line="301" column="29" selection-start-line="301" selection-start-column="29" selection-end-line="301" selection-end-column="29" />
+        <state relative-caret-position="-151">
+          <caret line="2" selection-start-line="2" selection-end-line="2" />
           <folding>
-            <element signature="e#0#40#0" expanded="true" />
+            <element signature="e#0#25#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/problems.js">
+    <entry file="file://$PROJECT_DIR$/src/App.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="2" selection-start-line="2" selection-end-line="2" />
+        <state relative-caret-position="260">
+          <caret line="333" column="14" lean-forward="true" selection-start-line="333" selection-start-column="14" selection-end-line="333" selection-end-column="14" />
           <folding>
-            <element signature="e#0#25#0" expanded="true" />
+            <element signature="e#0#40#0" expanded="true" />
           </folding>
         </state>
       </provider>

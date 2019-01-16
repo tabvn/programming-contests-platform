@@ -8,6 +8,7 @@
 #include <QVector>
 #include <QMessageBox>
 #include <QSqlTableModel>
+#include "submissionviewdialog.h"
 
 /**
  *Get user score by problem
@@ -215,6 +216,46 @@ void setupProblemsTab(Ui::DashboardWindow *ui, Contest *contest){
      setupProblemDetails(ui, contest->selectedProblem);
 }
 
+void insertItemToSubmissionTableView(Ui::DashboardWindow *ui,int row, Submission &s){
+
+    QString status = "Queue";
+    if(s.accepted){
+        status = "Accepted";
+    }
+    if(!s.error.isEmpty()){
+        status = s.error;
+    }
+
+
+    ui->submissionsTableWidget->setItem(row, 0, new QTableWidgetItem(QString::number(s.id)));
+    ui->submissionsTableWidget->setItem(row, 1, new QTableWidgetItem(QString::number(s.userId)));
+    ui->submissionsTableWidget->setItem(row, 2, new QTableWidgetItem(s.name));
+    ui->submissionsTableWidget->setItem(row, 3, new QTableWidgetItem(s.problem));
+    ui->submissionsTableWidget->setItem(row, 4, new QTableWidgetItem(status));
+    ui->submissionsTableWidget->setItem(row, 5, new QTableWidgetItem(QString::number(s.score)));
+}
+void setupSubmissionsTableView(Ui::DashboardWindow *ui, Contest *contest){
+
+    QStringList headers = {"#ID", "User ID", "Name", "Problem", "Status", "Score"};
+
+    ui->submissionsTableWidget->clear();
+    ui->submissionsTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->submissionsTableWidget->setColumnCount(6);
+    ui->submissionsTableWidget->setHorizontalHeaderLabels(headers);
+    ui->submissionsTableWidget->setColumnWidth(2, 180);
+
+    QVector<Submission> submissions = contest->getSubmissions();
+
+    ui->submissionsTableWidget->setRowCount(submissions.size());
+
+    for(int i = 0; i < submissions.size(); i++){
+        insertItemToSubmissionTableView(ui, i, submissions[i]);
+    }
+
+
+
+}
+
 void setupViews(Ui::DashboardWindow *ui, Contest *contest){
 
     // setup scoreboard table
@@ -225,6 +266,7 @@ void setupViews(Ui::DashboardWindow *ui, Contest *contest){
 
     setupUserTableView(ui->userTableWidget, contest);
     setupProblemsTab(ui, contest);
+    setupSubmissionsTableView(ui, contest);
 
    // show first tab
 
@@ -240,6 +282,8 @@ void setupViews(Ui::DashboardWindow *ui, Contest *contest){
 
 
 }
+
+
 
 /**
   * Window did mount
@@ -294,6 +338,16 @@ DashboardWindow::DashboardWindow(QWidget *parent, Contest *contest) :
     contest->subscribe("error", [&](QVariant message){
 
         qDebug() << "An error" << message;
+    });
+
+    contest->subscribe("onNewSubmission", [&](QVariant sid) {
+
+         int id = sid.toInt();
+         Submission s = this->contest->submissionsMap[id];
+         ui->submissionsTableWidget->insertRow(0);
+         insertItemToSubmissionTableView(ui, 0, s);
+         ui->submissionsTableWidget->selectRow(0);
+
     });
 
 
@@ -827,6 +881,20 @@ void DashboardWindow::on_contestButton_clicked()
     contest->start();
     }
     contest->publish("start", !started);
+
+
+}
+
+
+void DashboardWindow::on_submissionsTableWidget_itemDoubleClicked(QTableWidgetItem *item)
+{
+
+    qint64 id = ui->submissionsTableWidget->item(item->row(), 0)->data(0).toInt();
+    Submission s = contest->getSubmissionById(id);
+    SubmissionViewDialog *dialog = new SubmissionViewDialog(this, &s);
+    dialog->show();
+    dialog->raise();
+    dialog->activateWindow();
 
 
 }

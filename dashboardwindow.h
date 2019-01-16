@@ -66,6 +66,8 @@ private slots:
 
     void on_contestButton_clicked();
 
+    void on_submissionsTableWidget_itemDoubleClicked(QTableWidgetItem *item);
+
 private:
 
     Ui::DashboardWindow *ui;

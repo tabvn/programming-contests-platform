@@ -28,7 +28,8 @@ SOURCES += \
         main.cpp \
     dashboardwindow.cpp \
     server.cpp \
-    judge.cpp
+    judge.cpp \
+    submissionviewdialog.cpp
 
 
 HEADERS += \
@@ -38,10 +39,12 @@ HEADERS += \
     crow.h \
     server.h \
     json.h \
-    judge.h
+    judge.h \
+    submissionviewdialog.h
 
 FORMS += \
-    dashboardwindow.ui
+    dashboardwindow.ui \
+    submissionviewdialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -263,6 +263,7 @@ struct Problem {
 struct Submission{
     qint64 id;
     qint64 userId;
+    QString name;
     QString problem;
     int score;
     QString code;
@@ -311,6 +312,8 @@ struct Contest{
     bool started = false;
     QSqlQuery *query = nullptr;
     std::queue<Submission> submissionsQueue;
+    QMap<qint64, Submission> submissionsMap;
+
 
     Contest(){
 
@@ -558,6 +561,77 @@ struct Contest{
 
         return true;
     }
+    Problem getProblem(QString name){
+
+        Problem p;
+
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return p;
+        }
+
+
+        QSqlQuery q = *this->query;
+
+
+
+        if(!q.prepare("select name, description,maxScore, timeLimit, memoryLimit from problems where name=:name limit 1")){
+            qDebug() << q.lastError();
+            return p;
+        }
+
+        q.bindValue(":name", name);
+
+        if(!q.exec()){
+            qDebug() << q.lastError();
+            return p;
+        }
+
+        while(q.next()){
+
+            p.name =  q.value(0).toString();
+            p.description = q.value(1).toString();
+            p.maxScore = q.value(2).toInt();
+            p.timeLimit = q.value(3).toInt();
+            p.memoryLimit = q.value(4).toInt();
+
+            this->problems.push_back(p);
+        }
+
+
+        return p;
+    }
+
+    QVector<Test> getTestsByProblem(QString problem){
+        QVector<Test> pTests;
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return pTests;
+        }
+
+         if (!query->prepare("select id,strength, input, output from tests where problem=:problem")){
+             return pTests;
+         }
+
+         query->bindValue(":problem", problem);
+
+         if(!query->exec()){
+             return pTests;
+         }
+
+         Test t;
+         while(query->next()){
+             t.id = query->value(0).toInt();
+             t.strength = query->value(1).toInt();
+             t.input = query->value(2).toString();
+             t.output = query->value(3).toString();
+             pTests.push_back(t);
+         }
+
+         return pTests;
+
+    }
+
     QVector<Problem> getProblems(){
 
         this->problems.clear();
@@ -1020,9 +1094,18 @@ struct Contest{
             return false;
         }
 
+
+
         s.id = query->lastInsertId().toInt();
+        Submission sub = getSubmissionById(s.id);
+
+        s.name = sub.name;
 
         this->submissionsQueue.push(s); // save to queue
+
+
+        this->submissionsMap.insert(s.id, s);
+        this->publish("onNewSubmission", s.id);
 
         return true;
     }
@@ -1125,6 +1208,45 @@ struct Contest{
 
     }
 
+    Submission getSubmissionById(qint64 id){
+
+        Submission s;
+        s.id = id;
+        if(this->query == nullptr){
+
+            qDebug() << "Is not connect db";
+            return s;
+        }
+
+        if(!query->prepare("select s.id, s.userId, s.problem, s.code,s.score,s.accepted,s.error, s.status, s.created, u.firstname, u.lastname from submissions as s inner join users as u on u.id = s.userId where s.id=:id limit 1")){
+            qDebug() << "Error" << query->lastError();
+            return s;
+        }
+        query->bindValue(":id", id);
+
+        if(!query->exec()){
+            qDebug() << "Error" << query->lastError();
+            return s;
+        }
+
+        while(query->next()){
+            // only scan first one
+            s.id = id;
+            s.userId = query->value(1).toInt();
+            s.problem = query->value(2).toString();
+            s.code = query->value(3).toString();
+            s.score = query->value(4).toInt();
+            s.accepted = query->value(5).toInt();
+            s.error = query->value(6).toString();
+            s.status = query->value(7).toInt();
+            s.created = QDateTime::fromTime_t(query->value(8).toUInt());
+            s.name = query->value(10).toString() + " "+ query->value(9).toString(); // last + firstname in Vietnam :)
+
+            return s;
+        }
+
+        return s;
+    }
     QVector<Submission> getSubmissions(){
 
 
@@ -1136,7 +1258,7 @@ struct Contest{
             return submissions;
         }
 
-        if (!query->prepare("select id, userId, problem, code,score,accepted,error, status, created from submissions order by created desc")){
+        if (!query->prepare("select s.id, s.userId, s.problem, s.code,s.score,s.accepted,s.error, s.status, s.created, u.firstname, u.lastname from submissions as s inner join users as u on u.id = s.userId order by created desc limit 100")){
             return submissions;
         }
 
@@ -1157,6 +1279,7 @@ struct Contest{
             s.error = query->value(6).toString();
             s.status = query->value(7).toInt();
             s.created = QDateTime::fromTime_t(query->value(8).toUInt());
+            s.name = query->value(10).toString() + " "+ query->value(9).toString(); // last + firstname in Vietnam :)
 
            submissions.push_back(s);
         }
