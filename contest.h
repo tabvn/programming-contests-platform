@@ -22,7 +22,7 @@
 #include <mutex>
 #include <unordered_set>
 #include <unordered_map>
-
+#include <algorithm>
 
 namespace Ued {
 
@@ -64,6 +64,7 @@ struct Problem {
     int memoryLimit; // kb
     Test *selectedTest = nullptr;
     QVector<Test> tests;
+
     QVector<Test> getTests(){
 
         if(!this->tests.isEmpty()){
@@ -711,6 +712,13 @@ struct Contest{
             this->scoreboards.push_back(s);
 
         }
+
+
+        // sort by score descending
+
+        std::sort(this->scoreboards.begin(), this->scoreboards.end(), [&](Scoreboard a, Scoreboard b){
+            return a.total > b.total;
+        });
 
         return this->scoreboards;
     }

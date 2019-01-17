@@ -3,20 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="3b068a88-266f-447e-b145-99d46d6d56c5" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/../contest.h" beforeDir="false" afterPath="$PROJECT_DIR$/../contest.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dashboardwindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dashboardwindow.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dashboardwindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/../dashboardwindow.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dashboardwindow.ui" beforeDir="false" afterPath="$PROJECT_DIR$/../dashboardwindow.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../http.h" beforeDir="false" afterPath="$PROJECT_DIR$/../http.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../judge.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../judge.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../judge.h" beforeDir="false" afterPath="$PROJECT_DIR$/../judge.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server.h" beforeDir="false" afterPath="$PROJECT_DIR$/../server.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../submissionviewdialog.h" beforeDir="false" afterPath="$PROJECT_DIR$/../submissionviewdialog.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ued_dng.pro.user" beforeDir="false" afterPath="$PROJECT_DIR$/../ued_dng.pro.user" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/submissions.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/submissions.js" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -32,7 +18,7 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/App.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-2501">
+            <state relative-caret-position="-2261">
               <caret line="210" column="25" selection-start-line="210" selection-start-column="25" selection-end-line="210" selection-end-column="25" />
               <folding>
                 <element signature="e#0#40#0" expanded="true" />
@@ -44,7 +30,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/submissions.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="364">
+            <state relative-caret-position="595">
               <caret line="36" column="23" selection-start-line="36" selection-start-column="23" selection-end-line="36" selection-end-column="23" />
               <folding>
                 <element signature="e#0#25#0" expanded="true" />
@@ -192,17 +178,17 @@
       <workItem from="1547449371799" duration="5116000" />
       <workItem from="1547526975875" duration="1049000" />
       <workItem from="1547727987669" duration="3138000" />
+      <workItem from="1547735562539" duration="27000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="23679000" />
+    <option name="totallyTimeSpent" value="23706000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1680" height="982" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24954791" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24954791" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="npm" order="2" side_tool="true" />
       <window_info id="Favorites" order="3" side_tool="true" />
@@ -216,7 +202,7 @@
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
-      <window_info anchor="bottom" id="Terminal" order="10" visible="true" weight="0.21460675" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="10" visible="true" weight="0.21460675" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -297,82 +283,13 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/build/static/js/main.e93702ca.chunk.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="1" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/problems.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="2" selection-start-line="2" selection-end-line="2" />
-          <folding>
-            <element signature="e#0#25#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/build/static/js/main.d300d26f.chunk.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" column="25" selection-start-line="1" selection-start-column="25" selection-end-line="1" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/build/static/js/main.e0545b58.chunk.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="1" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/build/static/js/main.c9bdc3bb.chunk.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="1" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/build/static/js/1.ff592fda.chunk.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret column="167525" lean-forward="true" selection-start-column="167525" selection-end-column="167525" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/build/static/js/main.af808146.chunk.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" column="42" selection-start-line="1" selection-start-column="42" selection-end-line="1" selection-end-column="42" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/submissions.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="364">
-          <caret line="36" column="23" selection-start-line="36" selection-start-column="23" selection-end-line="36" selection-end-column="23" />
-          <folding>
-            <element signature="e#0#25#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/build/static/js/main.c6ba59eb.chunk.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="1" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/service.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="5" column="18" selection-start-line="5" selection-start-column="18" selection-end-line="5" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/build/static/js/main.e93702ca.chunk.js" />
+    <entry file="file://$PROJECT_DIR$/build/static/js/main.d300d26f.chunk.js" />
+    <entry file="file://$PROJECT_DIR$/build/static/js/main.e0545b58.chunk.js" />
+    <entry file="file://$PROJECT_DIR$/build/static/js/main.c9bdc3bb.chunk.js" />
+    <entry file="file://$PROJECT_DIR$/build/static/js/1.ff592fda.chunk.js" />
+    <entry file="file://$PROJECT_DIR$/build/static/js/main.af808146.chunk.js" />
+    <entry file="file://$PROJECT_DIR$/build/static/js/main.c6ba59eb.chunk.js" />
     <entry file="file://$PROJECT_DIR$/build/static/js/1.ef697626.chunk.js">
       <provider selected="true" editor-type-id="text-editor">
         <state>
@@ -396,10 +313,37 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/App.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2501">
+        <state relative-caret-position="-2261">
           <caret line="210" column="25" selection-start-line="210" selection-start-column="25" selection-end-line="210" selection-end-column="25" />
           <folding>
             <element signature="e#0#40#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/submissions.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="595">
+          <caret line="36" column="23" selection-start-line="36" selection-start-column="23" selection-end-line="36" selection-end-column="23" />
+          <folding>
+            <element signature="e#0#25#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/service.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="5" column="18" selection-start-line="5" selection-start-column="18" selection-end-line="5" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/problems.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="2" selection-start-line="2" selection-end-line="2" />
+          <folding>
+            <element signature="e#0#25#0" expanded="true" />
           </folding>
         </state>
       </provider>
