@@ -17,6 +17,15 @@
 #include <QtNetwork>
 #include <QUuid>
 #include <queue>
+#include "crow.h"
+#include "json.h"
+#include <mutex>
+#include <unordered_set>
+#include <unordered_map>
+
+
+namespace Ued {
+
 
 struct Login{
     qint64 id;
@@ -25,7 +34,6 @@ struct Login{
 };
 
 struct User{
-
     qint64 id;
     QString firstname;
     QString lastname;
@@ -43,146 +51,6 @@ struct Test{
     QString input;
     QString output;
     QString problem;
-
-    bool save(){
-        QSqlQuery q;
-
-        if(!this->id){
-            return false;
-        }
-        if(!q.prepare("update tests set strength=:strength where id=:id")){
-            return false;
-        }
-
-        q.bindValue(":strength", this->strength);
-        q.bindValue(":id", this->id);
-
-        if(q.exec()){
-
-            return true;
-        }
-
-        return false;
-    }
-
-    bool remove(){
-
-        if(!this->id){
-            return false;
-        }
-
-        QSqlQuery q;
-
-        if(!q.prepare("delete from tests where id=:id")){
-            return false;
-        }
-
-        q.bindValue(":id", this->id);
-
-        if(q.exec()){
-
-            return true;
-        }
-
-        return false;
-
-    }
-
-    bool updateInput(QString input){
-
-        QSqlQuery q;
-
-        if(!this->id){
-            return false;
-        }
-
-        if(!q.prepare("update tests set input=:input where id=:id")){
-            return false;
-        }
-
-        q.bindValue(":input", input);
-
-        q.bindValue(":id", this->id);
-
-        if(q.exec()){
-
-            return true;
-        }
-
-        return false;
-
-    }
-
-    bool updateOutput(QString output){
-
-        QSqlQuery q;
-
-        if(!this->id){
-            return false;
-        }
-
-        if(!q.prepare("update tests set output=:output where id=:id")){
-            return false;
-        }
-
-        q.bindValue(":output", output);
-
-        q.bindValue(":id", this->id);
-
-        if(q.exec()){
-
-            return true;
-        }
-
-        return false;
-
-    }
-
-    bool updateInputOutput(QString input, QString output){
-
-        QSqlQuery q;
-
-        if(!this->id){
-            return false;
-        }
-
-        if(!q.prepare("update tests set input=:input, output=:output where id=:id")){
-            return false;
-        }
-
-        q.bindValue(":input", input);
-        q.bindValue(":output", output);
-        q.bindValue(":id", this->id);
-
-        if(q.exec()){
-
-            return true;
-        }
-
-        return false;
-
-    }
-
-    bool loadInputOutput(){
-
-        QSqlQuery q;
-
-        if(!q.prepare("select input, output from tests where id=:id")){
-            return false;
-        }
-        q.bindValue(":id", this->id);
-
-        if(!q.exec()){
-            return false;
-        }
-        while(q.next()){
-            this->input = q.value(0).toString();
-            this->output = q.value(1).toString();
-        }
-
-
-        return true;
-    }
 };
 
 struct Problem {
@@ -195,9 +63,7 @@ struct Problem {
     int timeLimit; // second
     int memoryLimit; // kb
     Test *selectedTest = nullptr;
-
     QVector<Test> tests;
-
     QVector<Test> getTests(){
 
         if(!this->tests.isEmpty()){
@@ -282,6 +148,12 @@ struct Subscriber{
     std::function<void(QVariant arg)> callback;
 };
 
+struct TestCaseInputOutPut{
+    int strength;
+    QByteArray input;
+    QByteArray output;
+};
+
 struct ProblemScore{
     QString name;
     int score;
@@ -296,8 +168,10 @@ struct Scoreboard{
 
 };
 
+
 struct Contest{
 
+    std::uint16_t port = 8080;
     static QString argument;
     QString filePath;
     QString memoryPath;
@@ -312,7 +186,12 @@ struct Contest{
     bool started = false;
     QSqlQuery *query = nullptr;
     std::queue<Submission> submissionsQueue;
-    QMap<qint64, Submission> submissionsMap;
+    std::queue<Submission> submissionRealtimeQuee; // use to update to tableview;
+    std::unordered_set<crow::websocket::connection*> connections;
+    std::unordered_map<crow::websocket::connection*, qint64> user_connections;
+    std::mutex mtx;
+
+
 
 
     Contest(){
@@ -330,6 +209,8 @@ struct Contest{
     void stop(){
         this->started = false;
     }
+
+
     QString getIpAddress(){
 
         foreach (const QHostAddress &address, QNetworkInterface::allAddresses()) {
@@ -609,7 +490,40 @@ struct Contest{
             return pTests;
         }
 
-         if (!query->prepare("select id,strength, input, output from tests where problem=:problem")){
+         if (!query->prepare("select id,strength from tests where problem=:problem")){
+             qDebug() << query->lastError();
+             return pTests;
+         }
+
+         query->bindValue(":problem", problem);
+
+         if(!query->exec()){
+             qDebug() << query->lastError();
+             return pTests;
+         }
+
+         Test t;
+         while(query->next()){
+             t.id = query->value(0).toInt();
+             t.strength = query->value(1).toInt();
+             //t.input = query->value(2).toString();
+             //t.output = query->value(3).toString();
+             pTests.push_back(t);
+         }
+
+         return pTests;
+
+    }
+
+    QVector<TestCaseInputOutPut> getTestCasesInputOutput(QString problem){
+
+        QVector<TestCaseInputOutPut> pTests;
+        if(this->query == nullptr){
+            qDebug() << "not connected db";
+            return pTests;
+        }
+
+         if (!query->prepare("select strength, input, output from tests where problem=:problem")){
              return pTests;
          }
 
@@ -619,18 +533,20 @@ struct Contest{
              return pTests;
          }
 
-         Test t;
+         TestCaseInputOutPut t;
          while(query->next()){
-             t.id = query->value(0).toInt();
-             t.strength = query->value(1).toInt();
-             t.input = query->value(2).toString();
-             t.output = query->value(3).toString();
+
+             t.strength = query->value(0).toInt();
+             t.input = query->value(1).toByteArray();
+             t.output = query->value(2).toByteArray();
+
              pTests.push_back(t);
          }
 
          return pTests;
-
     }
+
+
 
     QVector<Problem> getProblems(){
 
@@ -747,7 +663,7 @@ struct Contest{
         QSqlQuery q = *this->query;
 
 
-        if (!q.prepare("select score, accepted, error from submissions where status=2 AND userId=:userId AND problem=:problem order by score desc limit 1")){
+        if (!q.prepare("select max(score) from submissions where status=2 AND userId=:userId AND problem=:problem")){
             qDebug() << q.lastError();
             return -1;
         }
@@ -1007,12 +923,13 @@ struct Contest{
 
     bool validateToken(QString token){
 
-
         if(query == nullptr){
+            qDebug() << "Error can not connected db";
             return false;
         }
        if(!query->prepare("select count(*) from users where token=:token")){
 
+           qDebug() << "Error prepare validate token" << query->lastError();
            return  false;
        }
        query->bindValue(":token", token);
@@ -1104,7 +1021,9 @@ struct Contest{
         this->submissionsQueue.push(s); // save to queue
 
 
-        this->submissionsMap.insert(s.id, s);
+
+        this->submissionRealtimeQuee.push(s);
+
         this->publish("onNewSubmission", s.id);
 
         return true;
@@ -1137,7 +1056,60 @@ struct Contest{
         }
 
 
+
+        this->submissionRealtimeQuee.push(s);
+        this->publish("onSubmissionUpdated", s.id);
+
+        // send socket data
+
+        nlohmann::json submissionObj = nlohmann::json::object();
+
+        submissionObj["id"] = s.id;
+        submissionObj["userId"] = s.userId;
+        submissionObj["problem"] = s.problem.toStdString();
+        submissionObj["created"] = s.created.toTime_t();
+        submissionObj["accepted"] = s.accepted;
+        submissionObj["error"] = s.error.toStdString();
+        submissionObj["code"] = s.code.toStdString();
+        submissionObj["score"] = s.score;
+        submissionObj["status"] = s.status;
+
+        // send to user id socket realtime
+
+        nlohmann::json j = nlohmann::json::object();
+
+        j["action"] = "submission";
+        j["payload"] = submissionObj;
+
+        this->sendRealtime(s.userId, j.dump());
+        this->sendAll("{\"action\": \"reload\"}");
+
         return true;
+    }
+
+   void sendAll(std::string data){
+
+       for (std::pair<crow::websocket::connection*, qint64> element : this->user_connections)
+       {
+           if(element.second != 0){
+              element.first->send_text(data);
+           }
+       }
+    }
+
+
+    void sendRealtime(qint64 userId, std::string data){
+
+        for (std::pair<crow::websocket::connection*, qint64> element : this->user_connections)
+        {
+            if(element.second == userId){
+
+                element.first->send_text(data);
+                // just send one
+                break;
+            }
+        }
+
     }
 
 
@@ -1258,7 +1230,7 @@ struct Contest{
             return submissions;
         }
 
-        if (!query->prepare("select s.id, s.userId, s.problem, s.code,s.score,s.accepted,s.error, s.status, s.created, u.firstname, u.lastname from submissions as s inner join users as u on u.id = s.userId order by created desc limit 100")){
+        if (!query->prepare("select s.id, s.userId, s.problem, s.code,s.score,s.accepted,s.error, s.status, s.created, u.firstname, u.lastname from submissions as s inner join users as u on u.id = s.userId order by created desc limit 300")){
             return submissions;
         }
 
@@ -1331,9 +1303,135 @@ struct Contest{
     }
 
 
+    bool saveTest(Test *s){
+
+
+        if(!s->id || this->query == nullptr){
+            return false;
+        }
+        if(!query->prepare("update tests set strength=:strength where id=:id")){
+            return false;
+        }
+
+        query->bindValue(":strength", s->strength);
+        query->bindValue(":id", s->id);
+
+        if(query->exec()){
+
+            return true;
+        }
+
+        return false;
+    }
+
+    bool removeTest(qint64 testId){
+
+        if(!testId || this->query == nullptr){
+            return false;
+        }
+
+
+
+        if(!query->prepare("delete from tests where id=:id")){
+            return false;
+        }
+
+        query->bindValue(":id", testId);
+
+        if(query->exec()){
+
+            return true;
+        }
+
+        return false;
+
+    }
+
+    bool updateTestInput(Test *s, QString input){
+
+        input = input.trimmed();
+
+        if(!s->id || this->query == nullptr){
+            return false;
+        }
+
+        if(!query->prepare("update tests set input=:input where id=:id")){
+            return false;
+        }
+
+        query->bindValue(":input", input);
+
+        query->bindValue(":id", s->id);
+
+        if(query->exec()){
+
+            return true;
+        }
+
+        return false;
+
+    }
+
+    bool updateTestOutput(Test *s, QString output){
+
+
+        output = output.trimmed();
+        if(!s->id || this->query == nullptr){
+            return false;
+        }
+
+        if(!this->query->prepare("update tests set output=:output where id=:id")){
+            return false;
+        }
+
+        query->bindValue(":output", output);
+
+        query->bindValue(":id", s->id);
+
+        if(query->exec()){
+
+            return true;
+        }
+
+        return false;
+
+    }
+
+
+
+    bool loadTestInputOutput(Test *s){
+
+
+        if(!s->id || this->query == nullptr){
+            qDebug() << "Error" << s->id << "No connect db";
+            return false;
+        }
+
+        if(!query->prepare("select input, output from tests where id=:id")){
+            qDebug() << query->lastError();
+            return false;
+        }
+
+        query->bindValue(":id", s->id);
+
+        if(!query->exec()){
+            return false;
+        }
+        while(query->next()){
+            s->input = query->value(0).toString();
+            s->output = query->value(1).toString();
+            return true;
+        }
+
+
+        return false;
+    }
+
 
 
 };
+
+}
 
 
 

@@ -74,7 +74,7 @@ void Judge::run()
                 if(err.isEmpty()){
 
                     // continue run test
-                        QVector<Test> tests = this->contest->getTestsByProblem(p.name);
+                        QVector<TestCaseInputOutPut> tests = this->contest->getTestCasesInputOutput(p.name);
 
                         int totalScore = 0;
                         int maxScore = p.maxScore;
@@ -99,15 +99,16 @@ void Judge::run()
 
 
                             }else{
-                                qDebug() << "Send input:" << QByteArray::fromStdString(tests[i].input.toStdString()) << tests[i].input;
-                                runExec.write(QByteArray::fromStdString(tests[i].input.toStdString()));
+                                qDebug() << "Send input:" <<QString::fromStdString(tests[i].input.toStdString());
+
+                                runExec.write(tests[i].input);
 
                                 runExec.closeWriteChannel();
 
                                 if (!runExec.waitForFinished(timeLimit)){
 
                                     qDebug() << "Error running on test: timout limit excecution" << i;
-                                    s.error = "Time limit execution on test #"+QString::number(i);
+                                    s.error = "Time limit execution on test #"+QString::number(i+1);
                                     s.accepted = 0;
                                     s.status = 2;
 
@@ -125,7 +126,7 @@ void Judge::run()
                                         result.remove(0,1);
                                     }
 
-                                    qDebug() << "Result:" << result << "Output expect:" << tests[i].output << " is matched:" << (result == tests[i].output);
+                                    qDebug() << "Result is matched:" << (result == tests[i].output);
 
                                     runExec.close();
                                     if(result == tests[i].output){
@@ -133,10 +134,10 @@ void Judge::run()
                                         totalScore += tests[i].strength * maxScore / totalStrength;
 
                                     }else{
-                                        s.error = "Wrong answer on test #" + QString::number(i);
+                                        s.error = "Wrong answer on test #" + QString::number(i+1);
                                         s.accepted = 0;
                                         s.status = 2;
-                                        break;
+
 
                                     }
 
@@ -150,7 +151,9 @@ void Judge::run()
 
                         if(s.error.isEmpty() || s.error.isNull()){
                             s.accepted = 1;
+
                         }
+                        s.status = 2;
                         s.score = totalScore;
                         contest->updateSubmission(s);
 

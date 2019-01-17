@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include "contest.h"
 #include <QtWidgets>
+using namespace Ued;
+
 namespace Ui {
 class DashboardWindow;
 }

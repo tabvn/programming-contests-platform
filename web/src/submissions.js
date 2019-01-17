@@ -1,5 +1,5 @@
 import React from 'react'
-
+import moment from 'moment'
 export default class Submissions extends React.Component {
 
   renderStatus = (s) => {
@@ -34,6 +34,7 @@ export default class Submissions extends React.Component {
         <tr>
           <th>Problem</th>
           <th>Score</th>
+          <th>Time</th>
           <th>Status</th>
         </tr>
         </thead>
@@ -44,6 +45,7 @@ export default class Submissions extends React.Component {
               <tr key={k}>
                 <td>{item.problem}</td>
                 <td>{item.score}</td>
+                <td>{moment.unix(item.created).format("DD/MM/YYYY HH:mm::ss")}</td>
                 <td>{this.renderStatus(item)}</td>
               </tr>
             )

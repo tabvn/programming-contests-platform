@@ -5,6 +5,8 @@
 #include <QThread>
 #include "contest.h"
 
+using namespace Ued;
+
 class Server : public QThread
 {
 
@@ -13,7 +15,7 @@ public:
 
 private:
 
-    Ued::Http *http;
+    Http *http;
     Contest *contest;
 
 protected:

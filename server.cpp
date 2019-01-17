@@ -1,5 +1,6 @@
 #include "server.h"
 
+
 Server::Server(Contest *contest)
 {
     this->contest = contest;
@@ -17,5 +18,5 @@ void Server::run()
         return;
     }
 
-    http->run(8080);
+    http->run(this->contest->port);
 }

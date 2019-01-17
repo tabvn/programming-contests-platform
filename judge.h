@@ -2,6 +2,9 @@
 #define JUDGE_H
 
 #include "contest.h"
+
+using namespace Ued;
+
 class Judge : public QThread
 {
 public:

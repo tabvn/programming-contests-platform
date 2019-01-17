@@ -4,6 +4,8 @@
 #include <QDialog>
 #include "contest.h"
 
+using namespace Ued;
+
 namespace Ui {
 class SubmissionViewDialog;
 }

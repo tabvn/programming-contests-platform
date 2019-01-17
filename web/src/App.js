@@ -182,71 +182,69 @@ const Content = styled.div`
   }
 `
 
+let ws
+
+let queue = []
+
 class App extends Component {
 
   state = {
     error: null,
-    submissions: [
-      {
-        userId: 201,
-        problem: 'A',
-        code: 'abc',
-        status: 0,
-        error: null,
-        score: 0,
-        accepted: 0,
-      },
-      {
-        userId: 201,
-        problem: 'A',
-        code: 'abc',
-        status: 2,
-        error: 'Time limit execution',
-        accepted: 0,
-      },
-      {
-        userId: 201,
-        problem: 'A',
-        code: 'abc',
-        status: 2,
-        score: 30,
-        error: null,
-        accepted: 1.
-      }
-    ],
-    problems: [
-      {name: 'A', description: '', maxScore: 30},
-      {name: 'B', description: '', maxScore: 30}
-    ],
-    scoreboard: [
-      {
-        id: 201,
-        name: 'Nguyen Dinh Toan',
-        problems: [
-          {
-            name: 'B',
-            score: -1,
-          },
-          {
-            name: 'A',
-            score: 10,
-          }
-        ],
-        total: 10,
-
-      },
-    ],
+    submissions: [],
+    problems: [],
+    scoreboard: [],
     page: 'scoreboard',
     user: service.user,
   }
 
   loadData = () => {
+
+    this.reloadScoreBoard()
+
+    service.get('api/my-submissions').then((res) => {
+      this.setState({
+        submissions: res.data,
+      })
+    }).catch((e) => {
+
+      if (e.response && e.response.status && e.response.status === 401) {
+        service.logout();
+        this.setState({
+          page: 'login',
+          error: 'An error loading submissions'
+        })
+      } else {
+        this.setState({
+          error: 'An error loading submissions'
+        })
+      }
+
+    })
+
+  }
+
+  componentDidMount () {
+
+    this.connect()
+
+    if (this.state.user) {
+      this.loadData()
+    } else {
+
+      this.setState({
+        page: 'login'
+      })
+    }
+
+  }
+
+  reloadScoreBoard () {
+
     service.get('api').then((res) => {
       this.setState({
         ...this.state,
         scoreboard: res.data.scoreboard,
         problems: res.data.problems,
-        submissions: res.data.submissions,
       })
     }).catch((e) => {
 
@@ -258,22 +256,79 @@ class App extends Component {
       } else {
         this.setState({
           error: 'An error loading data'
+        }, () => {
+          service.logout()
         })
       }
 
     })
+
   }
 
-  componentDidMount () {
-    if (this.state.user) {
-      this.loadData()
-    } else {
+  connect () {
+    ws = new WebSocket(`${window.Ued.ws}`)
+    ws.onopen = () => {
 
-      this.setState({
-        page: 'login'
+      // check queue and send
+      if (service.user) {
+        ws.send(JSON.stringify({
+          action: 'auth',
+          payload: service.user.token,
+        }))
+      }
+      queue.forEach((p) => {
+        ws.send(JSON.stringify(p))
       })
-    }
 
+      queue = []
+    }
+    ws.onmessage = (event) => {
+
+      const data = event.data
+
+      try {
+
+        const message = JSON.parse(data)
+        switch (message.action) {
+          case 'reload':
+            this.reloadScoreBoard()
+            break
+
+          case 'submission':
+
+            let submissions = this.state.submissions
+
+            const sIndex = submissions.findIndex((s) => s.id === message.payload.id)
+            if (sIndex !== -1) {
+              submissions[sIndex] = message.payload
+
+            } else {
+              submissions.push(message.payload)
+            }
+
+            this.setState({
+              ...this.state,
+              submissions: submissions,
+            })
+
+            break
+
+          default:
+
+            break
+        }
+
+      } catch (e) {
+        console.log('an error parser message', e)
+      }
+
+    }
+    ws.onclose = () => {
+      this.connect()
+    }
+    ws.onerror = () => {
+      this.connect()
+    }
   }
 
   renderPage = () => {
@@ -299,6 +354,18 @@ class App extends Component {
         return (
           <Login onSubmit={(data) => {
             service.auth(data.id, data.password).then((user) => {
+
+              const data = {
+                action: 'auth',
+                payload: user.token,
+              }
+
+              if (ws.readyState === 1) {
+                ws.send(JSON.stringify(data))
+              } else {
+                queue.push(data)
+              }
+
               this.loadData()
               this.setState({
                 error: null,
@@ -313,7 +380,7 @@ class App extends Component {
               }
               this.setState({
                 error: msg,
-              })
+              }, () => service.logout())
             })
           }}/>
         )
@@ -324,13 +391,11 @@ class App extends Component {
 
           service.solveProblem(data.problem, data.code).then((data) => {
 
-            let s = this.state.submissions
-
-            s.push(data)
+            const submissions = [data].concat(this.state.submissions)
 
             this.setState({
               page: 'submissions',
-              submission: s,
+              submission: submissions,
             })
 
           }).catch((e) => {

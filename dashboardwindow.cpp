@@ -33,7 +33,7 @@ void setupScoreTableView(QTableWidget *table, Contest *contest){
     table->clear();
 
 
-    QStringList headers = { "ID", "Name"};
+    QStringList headers = { "User ID", "Name"};
     QVector<Problem> problems = contest->getProblems();
     QString problemName;
 
@@ -70,7 +70,7 @@ void setupScoreTableView(QTableWidget *table, Contest *contest){
 
                userProblemScore = contest->getUserProblemScore(user.id, problems[i].name);
 
-               if(userProblemScore.toInt() > 0){
+               if(userProblemScore.toInt() >= 0){
                    score += userProblemScore.toInt();
                    table->setItem(row, column, new QTableWidgetItem(userProblemScore.toString()));
                }
@@ -89,6 +89,7 @@ void setupScoreTableView(QTableWidget *table, Contest *contest){
     table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     table->horizontalHeader()->setStretchLastSection(true);
     table->horizontalHeader()->resizeSection(1, 300);
+    table->sortByColumn(headers.length() -1, Qt::SortOrder::DescendingOrder);
 
 
 }
@@ -159,10 +160,13 @@ void setupProblemDetails(Ui::DashboardWindow *ui, Problem *problem){
 void onSelectProblemTest(Ui::DashboardWindow *ui, Contest *contest, Test *t){
 
     if (contest->selectedProblem == nullptr || t == nullptr){
+        qDebug() << "No selected problem or test";
         return;
     }
 
-    t->loadInputOutput();
+    contest->loadTestInputOutput(t);
+
+
     contest->selectedProblem->selectedTest = t;
     ui->inputTestCaseTextField->setPlainText(t->input);
     ui->outputTestCaseTextField->setPlainText(t->output);
@@ -186,7 +190,14 @@ void setupTestcaseTable(Ui::DashboardWindow *ui, Contest *contest){
 
     ui->testcaseTableWidget->setColumnCount(1);
     ui->testcaseTableWidget->setHorizontalHeaderLabels(headers);
-    QVector<Test> tests = contest->selectedProblem->getTests();
+
+    qDebug() << "selected probelm" << contest->selectedProblem->name;
+    QVector<Test> tests = contest->getTestsByProblem(contest->selectedProblem->name);
+    contest->selectedProblem->tests = tests;
+    if(!tests.empty()){
+         contest->selectedProblem->selectedTest = &tests[0];
+    }
+
     Test t;
 
     ui->testcaseTableWidget->setRowCount(tests.size());
@@ -216,8 +227,7 @@ void setupProblemsTab(Ui::DashboardWindow *ui, Contest *contest){
      setupProblemDetails(ui, contest->selectedProblem);
 }
 
-void insertItemToSubmissionTableView(Ui::DashboardWindow *ui,int row, Submission &s){
-
+QString getSubmissionStatus(Submission &s){
     QString status = "Queue";
     if(s.accepted){
         status = "Accepted";
@@ -226,13 +236,20 @@ void insertItemToSubmissionTableView(Ui::DashboardWindow *ui,int row, Submission
         status = s.error;
     }
 
+    return status;
+}
+void insertItemToSubmissionTableView(Ui::DashboardWindow *ui,int row, Submission s){
+
+
 
     ui->submissionsTableWidget->setItem(row, 0, new QTableWidgetItem(QString::number(s.id)));
     ui->submissionsTableWidget->setItem(row, 1, new QTableWidgetItem(QString::number(s.userId)));
     ui->submissionsTableWidget->setItem(row, 2, new QTableWidgetItem(s.name));
     ui->submissionsTableWidget->setItem(row, 3, new QTableWidgetItem(s.problem));
-    ui->submissionsTableWidget->setItem(row, 4, new QTableWidgetItem(status));
+    ui->submissionsTableWidget->setItem(row, 4, new QTableWidgetItem(getSubmissionStatus(s)));
     ui->submissionsTableWidget->setItem(row, 5, new QTableWidgetItem(QString::number(s.score)));
+
+
 }
 void setupSubmissionsTableView(Ui::DashboardWindow *ui, Contest *contest){
 
@@ -322,7 +339,7 @@ DashboardWindow::DashboardWindow(QWidget *parent, Contest *contest) :
 
         if(data == true){
             this->contest->started = true;
-            ui->contestlabel->setText("Runing: " + contest->getIpAddress() + ":8080");
+            ui->contestlabel->setText("Runing: " + contest->getIpAddress() + ":"+QString::number(this->contest->port));
             ui->contestlabel->setStyleSheet("QLabel { color : red; }");
             ui->contestButton->setText("Stop");
         }else{
@@ -340,13 +357,37 @@ DashboardWindow::DashboardWindow(QWidget *parent, Contest *contest) :
         qDebug() << "An error" << message;
     });
 
-    contest->subscribe("onNewSubmission", [&](QVariant sid) {
+    contest->subscribe("onNewSubmission", [&](QVariant) {
 
-         int id = sid.toInt();
-         Submission s = this->contest->submissionsMap[id];
-         ui->submissionsTableWidget->insertRow(0);
-         insertItemToSubmissionTableView(ui, 0, s);
-         ui->submissionsTableWidget->selectRow(0);
+         if(!this->contest->submissionRealtimeQuee.empty()){
+             ui->submissionsTableWidget->insertRow(0);
+             insertItemToSubmissionTableView(ui, 0, this->contest->submissionRealtimeQuee.front());
+             this->ui->submissionsTableWidget->selectRow(0);
+              this->contest->submissionRealtimeQuee.pop();
+         }
+
+
+    });
+
+    contest->subscribe("onSubmissionUpdated", [&](QVariant sid) {
+         setupScoreTableView(this->ui->scoreTableWidget, this->contest);
+        if(!this->contest->submissionRealtimeQuee.empty()){
+            Submission s = this->contest->submissionRealtimeQuee.front();
+             for(int i = 0; i < ui->submissionsTableWidget->rowCount(); i++){
+                 if (ui->submissionsTableWidget->item(i, 0)->text().toInt() == sid){
+                     if(s.id){
+                         this->ui->submissionsTableWidget->item(i, 4)->setText(getSubmissionStatus(s));
+                         this->ui->submissionsTableWidget->item(i, 5)->setText(QString::number(s.score));
+                         this->contest->submissionRealtimeQuee.pop();
+                     }
+                     break;
+                 }
+             }
+
+        }
+
+
+
 
     });
 
@@ -546,7 +587,7 @@ void DashboardWindow::on_problemComboBox_currentTextChanged(const QString &value
 
         contest->selectedProblem = this->contest->findProblemByName(value);
         setupProblemDetails(ui, contest->selectedProblem);
-        setupTestcaseTable(this->ui, contest);
+        setupTestcaseTable(this->ui, this->contest);
     }
 
 }
@@ -749,12 +790,17 @@ void DashboardWindow::on_actionNew_Contest_triggered()
 
 void DashboardWindow::on_addTestCaseBtn_clicked()
 {
+    if(this->contest->selectedProblem == nullptr){
+        qDebug() << "No problem selected";
+        return;
+    }
     Test t;
     t.strength = 10;
     t.problem = contest->selectedProblem->name;
     if (contest->addTestCase(&t)){
        contest->selectedProblem->tests.push_back(t);
        setupTestcaseTable(this->ui, contest);
+
        ui->testcaseTableWidget->setCurrentCell(ui->testcaseTableWidget->rowCount() -1, 0);
        ui->testcaseTableWidget->scrollToBottom();
 
@@ -784,7 +830,7 @@ void DashboardWindow::on_deleteTestCaseBtn_clicked()
 
         Test *t = contest->selectedProblem->findTestByIndex(row);
         if(t != nullptr){
-            t->remove();
+            this->contest->removeTest(t->id);
         }
         contest->selectedProblem->selectedTest = nullptr;
     }
@@ -823,7 +869,8 @@ void DashboardWindow::on_testcaseTableWidget_cellChanged(int row, int column)
         }
 
         contest->selectedProblem->selectedTest->strength = value;
-        contest->selectedProblem->selectedTest->save();
+
+        contest->saveTest(contest->selectedProblem->selectedTest);
 
 
     }
@@ -844,7 +891,8 @@ void DashboardWindow::on_inputTestCaseTextField_textChanged()
     QString input = ui->inputTestCaseTextField->toPlainText();
     contest->selectedProblem->selectedTest->input = input;
 
-    if (!contest->selectedProblem->selectedTest->updateInput(input)){
+
+    if (!contest->updateTestInput(contest->selectedProblem->selectedTest, input)){
         QMessageBox::warning(this, "Error save test case", "An error saving testcase");
     }
 }
@@ -862,7 +910,7 @@ void DashboardWindow::on_outputTestCaseTextField_textChanged()
     QString output = ui->outputTestCaseTextField->toPlainText();
     contest->selectedProblem->selectedTest->output = output;
 
-    if (!contest->selectedProblem->selectedTest->updateOutput(output)){
+    if (!contest->updateTestOutput(contest->selectedProblem->selectedTest,output)){
         QMessageBox::warning(this, "Error save test case", "An error saving testcase");
     }
 

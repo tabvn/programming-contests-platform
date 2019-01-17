@@ -7,6 +7,8 @@
 #include <iostream>
 #include <string>
 #include <QString>
+#include <unordered_set>
+#include <mutex>
 #include "json.h"
 
 #define router CROW_ROUTE
@@ -21,6 +23,9 @@ namespace Ued {
 
 
             this->contest = contest;
+
+
+
 
         }
 
@@ -57,6 +62,55 @@ namespace Ued {
             this->started = true;
 
 
+
+            router(app, "/ws")
+                    .websocket()
+                    .onopen([&](crow::websocket::connection& conn){
+                            qDebug() << "new websocket connection";
+                            std::lock_guard<std::mutex> _(this->contest->mtx);
+
+
+                                this->contest->connections.insert(&conn);
+                                this->contest->user_connections[&conn] = 0;
+                            })
+                    .onclose([&](crow::websocket::connection& conn, const std::string& /*reason*/){
+                            qDebug() << "websocket connection closed: " << this->contest->user_connections[&conn];
+                            std::lock_guard<std::mutex> _(this->contest->mtx);
+                            this->contest->user_connections.erase(&conn);
+                            this->contest->connections.erase(&conn);
+
+                            })
+                    .onmessage([&](crow::websocket::connection& conn, const std::string& data, bool is_binary){
+                            std::lock_guard<std::mutex> _(this->contest->mtx);
+
+
+                            if(!is_binary){
+                                qDebug() << "received message from userId" << this->contest->user_connections[&conn] << QString::fromStdString(data);
+
+                                nlohmann::json msg = nlohmann::json::parse(data);
+                                std::string action = msg["action"];
+
+                                if(action == "auth"){
+
+                                    std::string t = msg["payload"];
+
+
+                                    if(!t.empty()){
+
+                                        qint64 userId = this->contest->getUserIdFromToken(QString::fromStdString(t));
+                                        this->contest->user_connections[&conn] = userId;
+                                        qDebug() << "got userId:" << userId;
+                                    }
+
+
+
+                                }
+                            }
+
+
+            });
+
+
             router(app, "/")([&](const crow::request&, crow::response& res){
 
                 if(!contest->started){
@@ -75,7 +129,6 @@ namespace Ued {
 
                     return;
                 }
-
                 QTextStream in(&file);
                 QString content = in.readAll();
                 file.close();
@@ -86,6 +139,17 @@ namespace Ued {
 
 
             });
+
+
+            router(app, "/init.js")([&](const crow::request&, crow::response& res){
+
+                res.set_header("Content-Type", "application/javascript");
+                QString url = "ws://"+this->contest->getIpAddress() + ":" + QString::number(this->contest->port) + "/ws";
+                res.write("window.Ued = {ws: \""+url.toStdString()+"\"};");
+                res.end();
+
+            });
+
 
             router(app, "/app.js")([&](const crow::request&, crow::response& res){
 
@@ -205,6 +269,53 @@ namespace Ued {
                 res.set_header("Content-Type", "application/json");
 
                 res.write(body.dump());
+                res.end();
+
+
+            });
+
+            router(app, "/api/my-submissions")
+            ([&](const crow::request& req, crow::response& res){
+
+
+                res.set_header("Content-Type", "application/json");
+
+                std::string token = req.get_header_value("authorization");
+
+                if(token.empty()){
+                    this->Error(res, 401, "{\"error\": \"Access denied\"}");
+                    return;
+                }
+
+                int userId = contest->getUserIdFromToken(QString::fromStdString(token));
+
+                if(!userId){
+                    this->Error(res, 401, "{\"error\": \"Access denied\"}");
+                    return;
+                }
+
+                QVector<Submission> submissions = contest->getUserSubmissions(userId);
+                nlohmann::json submissionArr = nlohmann::json::array();
+                nlohmann::json submissionObj = nlohmann::json::object();
+
+
+                for (int i = 0; i < submissions.size(); i++) {
+                    submissionObj["id"] = submissions[i].id;
+                    submissionObj["userId"] = submissions[i].userId;
+                    submissionObj["problem"] = submissions[i].problem.toStdString();
+                    submissionObj["created"] = submissions[i].created.toTime_t();
+                    submissionObj["accepted"] = submissions[i].accepted;
+                    submissionObj["error"] = submissions[i].error.toStdString();
+                    submissionObj["code"] = submissions[i].code.toStdString();
+                    submissionObj["score"] = submissions[i].score;
+                    submissionObj["status"] = submissions[i].status;
+                    submissionArr.push_back(submissionObj);
+
+                }
+
+                res.set_header("Content-Type", "application/json");
+
+                res.write(submissionArr.dump());
                 res.end();
 
 
@@ -337,9 +448,8 @@ namespace Ued {
             });
 
 
-
-
-            app.port(port).multithreaded().run();
+            app.loglevel(crow::LogLevel::ERROR);
+            app.port(port).run();
 
         }
         bool isRuning(){

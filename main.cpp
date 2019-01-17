@@ -9,6 +9,8 @@
 #include "contest.h"
 #include "judge.h"
 
+using namespace Ued;
+
 int main(int argc, char *argv[])
 {
 
