@@ -309,13 +309,14 @@ void setupViews(Ui::DashboardWindow *ui, Contest *contest){
  */
 
 
-DashboardWindow::DashboardWindow(QWidget *parent, Contest *contest) :
+DashboardWindow::DashboardWindow(QWidget *parent, Contest *contest, Server* sThread, Judge* jThread) :
     QMainWindow(parent),
     ui(new Ui::DashboardWindow)
 {
 
-
     this->contest = contest;
+    this->judgeThead = jThread;
+    this->serverThread = sThread;
 
     ui->setupUi(this);
 
@@ -454,10 +455,22 @@ DashboardWindow::~DashboardWindow()
 {
     QSqlDatabase::removeDatabase(this->contest->filePath);
 
-    contest->publish("closeServer", true); // notify to http server close
+    //contest->publish("closeServer", true); // notify to http server close
+
+
+    this->serverThread->close();
+    if(!this->serverThread->wait(1000)) {
+            this->serverThread->terminate();
+     }
+
+    this->judgeThead->stopped  = true;
+   if(!this->judgeThead->wait(1000)){
+    this->judgeThead->terminate();
+   }
+
+
     delete ui;
 }
-
 
 void DashboardWindow::on_actionQuit_2_triggered()
 {

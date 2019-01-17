@@ -4,6 +4,9 @@
 #include <QMainWindow>
 #include "contest.h"
 #include <QtWidgets>
+#include "server.h"
+#include "judge.h"
+
 using namespace Ued;
 
 namespace Ui {
@@ -17,7 +20,7 @@ class DashboardWindow : public QMainWindow
 public:
 
 
-    explicit DashboardWindow(QWidget *parent = nullptr, Contest *contest = nullptr);
+    explicit DashboardWindow(QWidget *parent = nullptr, Contest *contest = nullptr, Server* serverThead = nullptr, Judge* jThead = nullptr);
 
     ~DashboardWindow();
 
@@ -74,6 +77,8 @@ private:
 
     Ui::DashboardWindow *ui;
     Contest *contest;
+    Server *serverThread;
+    Judge *judgeThead;
 
 signals:
     void valueChanged(int newValue);

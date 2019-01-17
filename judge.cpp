@@ -10,7 +10,7 @@ void Judge::run()
 {
 
     qDebug() << contest->submissionsQueue.size();
-    while(true){
+    while(this->stopped == false){
         Submission s;
 
         if(!contest->submissionsQueue.empty()){

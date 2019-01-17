@@ -12,6 +12,10 @@ class Server : public QThread
 
 public:
     Server(Contest* contest = nullptr);
+    void close(){
+        this->http->stop();
+    }
+    bool stopped = false;
 
 private:
 

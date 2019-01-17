@@ -17,17 +17,14 @@ int main(int argc, char *argv[])
     QApplication a( argc, argv );
 
     Contest *c = new Contest();
+    Server *s = new Server(c);
+    s->start();
 
+    Judge *j = new Judge(c);
+    j->start();
 
-    DashboardWindow dash(nullptr, c);
-    dash.show();
-
-    Server s(c);
-    s.start();
-
-    Judge j(c);
-    j.start();
-
+    DashboardWindow *dash = new DashboardWindow(nullptr, c, s, j);
+    dash->show();
 
     return a.exec();
 

@@ -9,6 +9,7 @@ class Judge : public QThread
 {
 public:
     Judge(Contest* contest = nullptr);
+    bool stopped = false;
 
 private:
     Contest *contest;
