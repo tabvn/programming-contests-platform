@@ -8,8 +8,10 @@ SubmissionViewDialog::SubmissionViewDialog(QWidget *parent, Submission *submissi
     ui->setupUi(this);
     this->submission = submission;
 
+    ui->label->setText(submission->name);
     ui->codePlainTextEdit->setPlainText(this->submission->code);
     ui->codePlainTextEdit->setTextInteractionFlags(Qt::TextInteractionFlag::TextSelectableByMouse);
+
 }
 
 SubmissionViewDialog::~SubmissionViewDialog()

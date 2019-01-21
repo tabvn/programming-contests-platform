@@ -1,0 +1,7 @@
+export const SET_PROBLEMS = 'set_problems'
+export const SET_SUBMISSIONS = 'set_submissions'
+export const UPDATE_SUBMISSION = 'update_submission'
+export const SET_SCOREBOARD = 'set_scoreboard'
+export const SET_MESSAGE = 'set_message'
+export const SET_USER= 'set_user'
+export const NEW_SUBMISSION = 'new_submission'

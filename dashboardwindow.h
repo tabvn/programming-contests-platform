@@ -73,6 +73,13 @@ private slots:
 
     void on_submissionsTableWidget_itemDoubleClicked(QTableWidgetItem *item);
 
+
+
+
+    void on_selectPdfpushButton_clicked();
+
+    void on_actionExcel_triggered();
+
 private:
 
     Ui::DashboardWindow *ui;

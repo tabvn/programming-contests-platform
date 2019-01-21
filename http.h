@@ -20,13 +20,7 @@ namespace Ued {
         bool started = false;
 
         Http(Contest *contest){
-
-
             this->contest = contest;
-
-
-
-
         }
 
         void Error(crow::response& res, int code, std::string message){
@@ -57,6 +51,33 @@ namespace Ued {
 
 
         }
+
+        void renderHtml(const crow::request&, crow::response& res) {
+
+            if(!contest->started){
+                res.code = 400;
+                res.write("Contest has not started yet");
+                res.end();
+
+                return;
+            }
+
+            QFile file(":/app/web.html.ts");
+            if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
+                res.code = 404;
+                res.write("not found");
+                res.end();
+
+                return;
+            }
+            QTextStream in(&file);
+            QString content = in.readAll();
+            file.close();
+            res.set_header("Content-Type", "text/html; charset=utf-8");
+            res.write(content.toStdString());
+            res.end();
+
+        }
         void run(std::uint16_t port){
 
             this->started = true;
@@ -85,7 +106,7 @@ namespace Ued {
 
 
                             if(!is_binary){
-                                qDebug() << "received message from userId" << this->contest->user_connections[&conn] << QString::fromStdString(data);
+                                //qDebug() << "received message from userId" << this->contest->user_connections[&conn] << QString::fromStdString(data);
 
                                 nlohmann::json msg = nlohmann::json::parse(data);
                                 std::string action = msg["action"];
@@ -99,7 +120,7 @@ namespace Ued {
 
                                         qint64 userId = this->contest->getUserIdFromToken(QString::fromStdString(t));
                                         this->contest->user_connections[&conn] = userId;
-                                        qDebug() << "got userId:" << userId;
+                                       // qDebug() << "got userId:" << userId;
                                     }
 
 
@@ -111,32 +132,26 @@ namespace Ued {
             });
 
 
-            router(app, "/")([&](const crow::request&, crow::response& res){
+            router(app, "/")([&](const crow::request& req, crow::response& res){
+                renderHtml(req, res);
 
-                if(!contest->started){
-                    res.code = 400;
-                    res.write("Contest has not started yet");
-                    res.end();
+            });
 
-                    return;
-                }
+            router(app, "/login")([&](const crow::request& req, crow::response& res){
+                renderHtml(req, res);
 
-                QFile file(":/app/web.html.ts");
-                if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-                    res.code = 404;
-                    res.write("not found");
-                    res.end();
+            });
 
-                    return;
-                }
-                QTextStream in(&file);
-                QString content = in.readAll();
-                file.close();
-                res.set_header("Content-Type", "text/html; charset=utf-8");
-                res.write(content.toStdString());
-                res.end();
+            router(app, "/submissions")([&](const crow::request& req, crow::response& res){
+                renderHtml(req, res);
 
+            });
+            router(app, "/problems")([&](const crow::request& req, crow::response& res){
+                renderHtml(req, res);
 
+            });
+            router(app, "/problems/<string>")([&](const crow::request& req, crow::response& res, std::string){
+                renderHtml(req, res);
 
             });
 
@@ -173,7 +188,35 @@ namespace Ued {
             });
 
 
-            router(app, "/api")
+
+            router(app, "/api/pdf/<string>")([&](const crow::request&, crow::response& res, std::string name){
+
+                Problem *p = this->contest->findProblemByName(QString::fromStdString(name));
+                if(!contest->started){
+                    res.code = 400;
+                    res.write("Contest has not started yet");
+                    res.end();
+
+                }
+                if(p != nullptr){
+                    if(!p->file.isEmpty()){
+                        res.set_header("Content-Type", "application/pdf");
+                        res.write(p->file.toStdString());
+                        res.end();
+                        return;
+                    }
+
+                }
+
+                res.code = 404;
+                res.write("not found.");
+                res.end();
+
+
+            });
+
+
+            router(app, "/api/problems")
             ([&](const crow::request& req, crow::response& res){
 
 
@@ -196,23 +239,53 @@ namespace Ued {
 
 
 
-                nlohmann::json body = nlohmann::json::object();
 
                 QVector<Problem> problems = contest->getProblems();
-
-
                 nlohmann::json problemJsonArr = nlohmann::json::array();
                 nlohmann::json problemObject = nlohmann::json::object();
+
+                bool hasPdf = false;
 
                 for (int i = 0; i < problems.size(); i++) {
 
                     problemObject["name"] = problems[i].name.toStdString();
                     problemObject["maxScore"] = problems[i].maxScore;
                     problemObject["description"] = problems[i].description.toStdString();
+                    hasPdf = false;
+                    if(!problems[i].file.isEmpty()){
+                        hasPdf = true;
+                    }
+                    problemObject["hasPdf"] = hasPdf;
+
 
                    problemJsonArr.push_back(problemObject);
                 }
+                res.set_header("Content-Type", "application/json");
+                res.write(problemJsonArr.dump());
+                res.end();
 
+
+            });
+
+            router(app, "/api/scoreboard")
+            ([&](const crow::request& req, crow::response& res){
+
+
+                res.set_header("Content-Type", "application/json");
+
+                std::string token = req.get_header_value("authorization");
+
+                if(token.empty()){
+                    this->Error(res, 401, "{\"error\": \"Access denied\"}");
+                    return;
+                }
+
+                int userId = contest->getUserIdFromToken(QString::fromStdString(token));
+
+                if(!userId){
+                    this->Error(res, 401, "{\"error\": \"Access denied\"}");
+                    return;
+                }
 
 
                 QVector<Scoreboard> scores = contest->getScoreboards();
@@ -224,6 +297,7 @@ namespace Ued {
 
                 for (int i = 0; i< scores.size(); i++) {
                     scoreObject["name"] = scores[i].name.toStdString();
+                    scoreObject["userId"] = scores[i].userId;
                     scoreObject["total"] = scores[i].total;
                     pJsonArr.clear();
                     for (int j = 0; j < scores[i].problems.size(); j++) {
@@ -237,42 +311,13 @@ namespace Ued {
                     scoreJsonArr.push_back(scoreObject);
 
                 }
-
-
-                QVector<Submission> submissions = contest->getUserSubmissions(userId);
-
-                nlohmann::json submissionArr = nlohmann::json::array();
-                nlohmann::json submissionObj = nlohmann::json::object();
-
-
-
-
-                for (int i = 0; i < submissions.size(); i++) {
-                    submissionObj["id"] = submissions[i].id;
-                    submissionObj["userId"] = submissions[i].userId;
-                    submissionObj["problem"] = submissions[i].problem.toStdString();
-                    submissionObj["created"] = submissions[i].created.toTime_t();
-                    submissionObj["accepted"] = submissions[i].accepted;
-                    submissionObj["error"] = submissions[i].error.toStdString();
-                    submissionObj["code"] = submissions[i].code.toStdString();
-                    submissionObj["score"] = submissions[i].score;
-                    submissionObj["status"] = submissions[i].status;
-                    submissionArr.push_back(submissionObj);
-
-                }
-
-
-                body["problems"] = problemJsonArr;
-                body["scoreboard"] = scoreJsonArr;
-                body["submissions"] = submissionArr;
-
                 res.set_header("Content-Type", "application/json");
-
-                res.write(body.dump());
+                res.write(scoreJsonArr.dump());
                 res.end();
 
 
             });
+
 
             router(app, "/api/my-submissions")
             ([&](const crow::request& req, crow::response& res){
@@ -327,7 +372,7 @@ namespace Ued {
 
                 std::string token = req.get_header_value("authorization");
 
-                res.set_header("Content-Type", "text/html; charset=utf-8");
+                res.set_header("Content-Type", "application/json; charset=utf-8");
                 if(token.empty()){
                     this->Error(res, 401, "{\"error\": \"wrong token.\"}");
                     return;

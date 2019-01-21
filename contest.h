@@ -62,7 +62,7 @@ struct Problem {
     int maxScore;
     int timeLimit; // second
     int memoryLimit; // kb
-    Test *selectedTest = nullptr;
+    Test selectedTest;
     QVector<Test> tests;
 
     QVector<Test> getTests(){
@@ -163,7 +163,8 @@ struct ProblemScore{
 struct Scoreboard{
 
       QString name;
-      int uesrId;
+      QString className;
+      int userId;
       int total;
       QVector<ProblemScore> problems;
 
@@ -177,7 +178,7 @@ struct Contest{
     QString filePath;
     QString memoryPath;
     bool shouldCreateSchema = true;
-    Problem *selectedProblem = nullptr;
+    Problem selectedProblem;
     QVector<User> users;
     QVector<User> scoreboardUsers;
     QVector<Problem> problems;
@@ -330,7 +331,13 @@ struct Contest{
         return -1;
     }
 
-    bool updateProblem(QString name, Problem *p){
+    bool updateProblem(QString name, Problem &p){
+
+        if(p.name.isEmpty()){
+            qDebug() << "problem name is empty";
+            return false;
+        }
+
         if(this->query == nullptr){
             qDebug() << "not connected db";
            return false;
@@ -344,27 +351,33 @@ struct Contest{
         }
 
         q.bindValue(":name", name);
-        q.bindValue(":newName",p-> name);
-        q.bindValue(":description", p->description);
-        q.bindValue(":fileType", p->fileType);
-        q.bindValue(":file", p->file);
-        q.bindValue(":maxScore", p->maxScore);
-        q.bindValue(":memoryLimit", p->memoryLimit);
-        q.bindValue(":timeLimit", p->timeLimit);
+        q.bindValue(":newName",p.name);
+        q.bindValue(":description", p.description);
+        q.bindValue(":fileType", p.fileType);
+        q.bindValue(":file", p.file);
+        q.bindValue(":maxScore", p.maxScore);
+        q.bindValue(":memoryLimit", p.memoryLimit);
+        q.bindValue(":timeLimit", p.timeLimit);
 
         if (!q.exec()){
+
 
             return false;
         }
 
+        int pIndex = this->findProblemIndex(p.name);
+        if(pIndex != -1){
+            this->problems[pIndex] = p;
+        }
+
         q.prepare("update tests set problem=:problem where problem=:p");
         q.bindValue(":p", name);
-        q.bindValue(":problem", p->name);
+        q.bindValue(":problem", p.name);
         q.exec();
 
         q.prepare("update submissions set problem=:problem where problem=:p");
         q.bindValue(":p", name);
-        q.bindValue(":problem", p->name);
+        q.bindValue(":problem", p.name);
         q.exec();
 
 
@@ -372,7 +385,7 @@ struct Contest{
         return true;
     }
 
-    bool deleteProblem(Problem *p){
+    bool deleteProblem(Problem &p){
 
         if(this->query == nullptr){
             qDebug() << "not connected db";
@@ -384,14 +397,14 @@ struct Contest{
             return false;
         }
 
-        q.bindValue(":name", p->name);
+        q.bindValue(":name", p.name);
 
         if(!q.exec()){
             return false;
         }
 
         for (int i = 0; i < this->problems.size(); i++) {
-            if(this->problems[i].name == p->name){
+            if(this->problems[i].name == p.name){
                 this->problems.removeAt(i);
 
                 break;
@@ -562,7 +575,7 @@ struct Contest{
 
 
 
-        if(!q.prepare("select name, description,maxScore, timeLimit, memoryLimit from problems where name is not null order by name asc")){
+        if(!q.prepare("select name, description,maxScore, timeLimit, memoryLimit, file from problems where name is not null order by name asc")){
             qDebug() << q.lastError();
             return this->problems;
         }
@@ -579,6 +592,7 @@ struct Contest{
             p.maxScore = q.value(2).toInt();
             p.timeLimit = q.value(3).toInt();
             p.memoryLimit = q.value(4).toInt();
+            p.file = q.value(5).toByteArray();
 
             this->problems.push_back(p);
         }
@@ -695,6 +709,8 @@ struct Contest{
         for (int i = 0; i < scoreUsers.size(); i++) {
 
             s.name = scoreUsers[i].lastname + " " + scoreUsers[i].firstname;
+            s.userId = scoreUsers[i].id;
+            s.className = scoreUsers[i].className;
 
             s.problems.clear();
             total = 0;
@@ -709,6 +725,8 @@ struct Contest{
             }
 
             s.total = total;
+
+
             this->scoreboards.push_back(s);
 
         }
@@ -785,7 +803,7 @@ struct Contest{
         }
         QSqlQuery q = *this->query;
 
-        if(this->selectedProblem == nullptr){
+        if(this->selectedProblem.name.isEmpty()){
             return false;
         }
 
@@ -794,7 +812,7 @@ struct Contest{
             return false;
         }
 
-        q.bindValue(":problem", this->selectedProblem->name);
+        q.bindValue(":problem", this->selectedProblem.name);
         q.bindValue(":strength", t->strength);
 
 
@@ -1122,9 +1140,22 @@ struct Contest{
 
 
     bool logout(QString token){
+
+
         if(this->query == nullptr){
             qDebug() << "not connected db";
             return false;
+        }
+
+
+        qint64 userId = this->getUserIdFromToken(token);
+
+        for (std::pair<crow::websocket::connection*, qint64> element : this->user_connections)
+        {
+            if(element.second == userId){
+                element.second = 0; // assign nobody to websocket
+                break;
+            }
         }
 
         if(query->prepare("update users set token=:t where token=:token")){
@@ -1167,7 +1198,7 @@ struct Contest{
         while(q.next()){
 
             l.id = id;
-            l.name = q.value(0).toString() + " " + q.value(1).toString();
+            l.name = q.value(1).toString() + " " + q.value(0).toString(); // last + first = Vietnamese style
             l.token = QUuid::createUuid().toString().mid(1,36).toUpper();
         }
 
@@ -1311,18 +1342,18 @@ struct Contest{
     }
 
 
-    bool saveTest(Test *s){
+    bool saveTest(Test &s){
 
 
-        if(!s->id || this->query == nullptr){
+        if(!s.id || this->query == nullptr){
             return false;
         }
         if(!query->prepare("update tests set strength=:strength where id=:id")){
             return false;
         }
 
-        query->bindValue(":strength", s->strength);
-        query->bindValue(":id", s->id);
+        query->bindValue(":strength", s.strength);
+        query->bindValue(":id", s.id);
 
         if(query->exec()){
 
@@ -1355,11 +1386,11 @@ struct Contest{
 
     }
 
-    bool updateTestInput(Test *s, QString input){
+    bool updateTestInput(Test &s, QString input){
 
         input = input.trimmed();
 
-        if(!s->id || this->query == nullptr){
+        if(!s.id || this->query == nullptr){
             return false;
         }
 
@@ -1369,7 +1400,7 @@ struct Contest{
 
         query->bindValue(":input", input);
 
-        query->bindValue(":id", s->id);
+        query->bindValue(":id", s.id);
 
         if(query->exec()){
 
@@ -1380,11 +1411,11 @@ struct Contest{
 
     }
 
-    bool updateTestOutput(Test *s, QString output){
+    bool updateTestOutput(Test &s, QString output){
 
 
         output = output.trimmed();
-        if(!s->id || this->query == nullptr){
+        if(!s.id || this->query == nullptr){
             return false;
         }
 
@@ -1394,7 +1425,7 @@ struct Contest{
 
         query->bindValue(":output", output);
 
-        query->bindValue(":id", s->id);
+        query->bindValue(":id", s.id);
 
         if(query->exec()){
 
@@ -1407,11 +1438,11 @@ struct Contest{
 
 
 
-    bool loadTestInputOutput(Test *s){
+    bool loadTestInputOutput(Test &s){
 
 
-        if(!s->id || this->query == nullptr){
-            qDebug() << "Error" << s->id << "No connect db";
+        if(!s.id || this->query == nullptr){
+            qDebug() << "Error" << s.id << "No connect db";
             return false;
         }
 
@@ -1420,14 +1451,15 @@ struct Contest{
             return false;
         }
 
-        query->bindValue(":id", s->id);
+        query->bindValue(":id", s.id);
 
         if(!query->exec()){
             return false;
         }
         while(query->next()){
-            s->input = query->value(0).toString();
-            s->output = query->value(1).toString();
+
+            s.input = query->value(0).toString();
+            s.output = query->value(1).toString();
             return true;
         }
 

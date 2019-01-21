@@ -40,7 +40,8 @@ HEADERS += \
     server.h \
     json.h \
     judge.h \
-    submissionviewdialog.h
+    submissionviewdialog.h \
+    export.h
 
 FORMS += \
     dashboardwindow.ui \
@@ -57,6 +58,7 @@ win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../usr/local/Cell
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/lib/debug/ -lboost_thread-mt
 else:unix: LIBS += -L$$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/lib/ -lboost_thread-mt
 
+# boost lib
 INCLUDEPATH += $$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/include
 DEPENDPATH += $$PWD/../../../../usr/local/Cellar/boost/1.67.0_1/include
 
@@ -72,3 +74,11 @@ DISTFILES +=
 RESOURCES += files.qrc
 ICON = app.icns
 
+
+## XLS lib
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../usr/local/Cellar/libxlsxwriter/0.8.4/lib/release/ -lxlsxwriter
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../usr/local/Cellar/libxlsxwriter/0.8.4/lib/debug/ -lxlsxwriter
+else:unix: LIBS += -L$$PWD/../../../../usr/local/Cellar/libxlsxwriter/0.8.4/lib/ -lxlsxwriter
+
+INCLUDEPATH += $$PWD/../../../../usr/local/Cellar/libxlsxwriter/0.8.4/include
+DEPENDPATH += $$PWD/../../../../usr/local/Cellar/libxlsxwriter/0.8.4/include

@@ -1,6 +1,22 @@
 import React from 'react'
 import moment from 'moment'
-export default class Submissions extends React.Component {
+import { bindActionCreators } from 'redux'
+import { connect } from 'react-redux'
+import Layout from './layout'
+import { loadSubmissions } from './redux/actions'
+import { history } from './history'
+
+class Submissions extends React.Component {
+
+  componentWillMount () {
+    if (!this.props.user) {
+      history.push('/login')
+      return
+    }
+    if (!this.props.submissions.length) {
+      this.props.loadSubmissions()
+    }
+  }
 
   renderStatus = (s) => {
     if (s.status === 0) {
@@ -29,30 +45,43 @@ export default class Submissions extends React.Component {
     const {submissions} = this.props
 
     return (
-      <table>
-        <thead>
-        <tr>
-          <th>Problem</th>
-          <th>Score</th>
-          <th>Time</th>
-          <th>Status</th>
-        </tr>
-        </thead>
-        <tbody>
-        {
-          submissions.map((item, k) => {
-            return (
-              <tr key={k}>
-                <td>{item.problem}</td>
-                <td>{item.score}</td>
-                <td>{moment.unix(item.created).format("DD/MM/YYYY HH:mm::ss")}</td>
-                <td>{this.renderStatus(item)}</td>
-              </tr>
-            )
-          })
-        }
-        </tbody>
-      </table>
+      <Layout>
+        <table>
+          <thead>
+          <tr>
+            <th>Problem</th>
+            <th>Score</th>
+            <th>Time</th>
+            <th>Status</th>
+          </tr>
+          </thead>
+          <tbody>
+          {
+            submissions.map((item, k) => {
+              return (
+                <tr key={k}>
+                  <td>{item.problem}</td>
+                  <td>{item.score}</td>
+                  <td>{moment.unix(item.created).format('DD/MM/YYYY HH:mm::ss')}</td>
+                  <td>{this.renderStatus(item)}</td>
+                </tr>
+              )
+            })
+          }
+          </tbody>
+        </table>
+      </Layout>
     )
   }
 }
+
+const mapStateToProps = (state, props) => ({
+  submissions: state.submission,
+  user: state.app.user,
+})
+
+const mapDispatchToProps = (dispatch) => bindActionCreators({
+  loadSubmissions
+}, dispatch)
+
+export default connect(mapStateToProps, mapDispatchToProps)(Submissions)

@@ -28,7 +28,7 @@ void Judge::run()
             if (!QDir(dir).exists()){
                 if (!QDir().mkpath(dir)){
                     qDebug() << "can not create file" << dir;
-                    contest->publish("error", "Could not create file for compile submission.");
+                   // contest->publish("error", "Could not create file for compile submission.");
                     break;
                 }
             }
@@ -168,9 +168,8 @@ void Judge::run()
                 }
             }
 
-
             QDir d(dir);
-            //d.removeRecursively();
+            d.removeRecursively(); // delete run test folder
 
             contest->submissionsQueue.pop();
         }

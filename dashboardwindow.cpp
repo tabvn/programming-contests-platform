@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QSqlTableModel>
 #include "submissionviewdialog.h"
+#include "export.h"
 
 /**
  *Get user score by problem
@@ -131,9 +132,8 @@ void setupProblemListComboBox(Ui::DashboardWindow *ui, Contest *contest){
 
 
 
-
-   QVector<Problem> problems = contest->getProblems();
    ui->problemComboBox->clear();
+   QVector<Problem> problems = contest->getProblems();
    for (int i =0; i< problems.size(); i++) {
        ui->problemComboBox->addItem(problems[i].name);
        ui->problemComboBox->setCurrentIndex(0);
@@ -143,33 +143,35 @@ void setupProblemListComboBox(Ui::DashboardWindow *ui, Contest *contest){
 
 }
 
-void setupProblemDetails(Ui::DashboardWindow *ui, Problem *problem){
-    if(problem == nullptr){
-        return;
+void setupProblemDetails(Ui::DashboardWindow *ui, Problem &problem){
+
+
+    ui->problemTextField->setText(problem.name);
+    ui->maxScoreTextField->setText(QString::number(problem.maxScore));
+    ui->memoryLimitTextField->setText(QString::number(problem.memoryLimit));
+    ui->timelimitTextField->setText(QString::number(problem.timeLimit));
+    ui->descriptionTextField->setHtml(problem.description);
+
+    if(problem.file.isEmpty()){
+        ui->pdfFileLabel->setText("");
+        ui->selectPdfpushButton->setText("Select PDF file");
+    }else{
+        ui->pdfFileLabel->setText(problem.name + ".pdf");
+        ui->selectPdfpushButton->setText("Delete PDF file?");
     }
 
-    ui->problemTextField->setText(problem->name);
-    ui->maxScoreTextField->setText(QString::number(problem->maxScore));
-    ui->memoryLimitTextField->setText(QString::number(problem->memoryLimit));
-    ui->timelimitTextField->setText(QString::number(problem->timeLimit));
-    ui->descriptionTextField->setHtml(problem->description);
+
 
 
 }
 
-void onSelectProblemTest(Ui::DashboardWindow *ui, Contest *contest, Test *t){
+void onSelectProblemTest(Ui::DashboardWindow *ui, Contest *contest, Test &t){
 
-    if (contest->selectedProblem == nullptr || t == nullptr){
-        qDebug() << "No selected problem or test";
-        return;
-    }
 
     contest->loadTestInputOutput(t);
-
-
-    contest->selectedProblem->selectedTest = t;
-    ui->inputTestCaseTextField->setPlainText(t->input);
-    ui->outputTestCaseTextField->setPlainText(t->output);
+    contest->selectedProblem.selectedTest = t;
+    ui->inputTestCaseTextField->setPlainText(t.input);
+    ui->outputTestCaseTextField->setPlainText(t.output);
 
 }
 
@@ -181,9 +183,7 @@ void insertItemToTableTestCase(Ui::DashboardWindow *ui, Test *t, int row){
 }
 void setupTestcaseTable(Ui::DashboardWindow *ui, Contest *contest){
 
-    if(contest->selectedProblem == nullptr){
-        return;
-    }
+
     ui->testcaseTableWidget->clear();
 
     QStringList headers = {"Strength"};
@@ -191,11 +191,13 @@ void setupTestcaseTable(Ui::DashboardWindow *ui, Contest *contest){
     ui->testcaseTableWidget->setColumnCount(1);
     ui->testcaseTableWidget->setHorizontalHeaderLabels(headers);
 
-    qDebug() << "selected probelm" << contest->selectedProblem->name;
-    QVector<Test> tests = contest->getTestsByProblem(contest->selectedProblem->name);
-    contest->selectedProblem->tests = tests;
+
+    QVector<Test> tests = contest->getTestsByProblem(contest->selectedProblem.name);
+    contest->selectedProblem.tests = tests;
+
     if(!tests.empty()){
-         contest->selectedProblem->selectedTest = &tests[0];
+
+         contest->selectedProblem.selectedTest = tests[0];
     }
 
     Test t;
@@ -210,12 +212,6 @@ void setupTestcaseTable(Ui::DashboardWindow *ui, Contest *contest){
     }
 
     ui->testcaseTableWidget->horizontalHeader()->setStretchLastSection(true);
-
-    if(contest->selectedProblem->selectedTest == nullptr){
-        ui->inputTestCaseTextField->setPlainText("");
-        ui->outputTestCaseTextField->setPlainText("");
-    }
-
 
 
 }
@@ -289,9 +285,11 @@ void setupViews(Ui::DashboardWindow *ui, Contest *contest){
 
     ui->actionSave->setEnabled(true);
     ui->actionSave_as->setEnabled(true);
+    ui->actionExcel->setEnabled(true);
     if(contest->filePath.isEmpty()){
          ui->actionSave->setEnabled(false);
          ui->actionSave_as->setEnabled(false);
+         ui->actionExcel->setEnabled(false);
     }
 
     ui->tabWidget->setCurrentIndex(0);
@@ -330,6 +328,7 @@ DashboardWindow::DashboardWindow(QWidget *parent, Contest *contest, Server* sThr
 
     ui->actionSave->setEnabled(false);
     ui->actionSave_as->setEnabled(false);
+    ui->actionExcel->setEnabled(false);
 
     if(contest == nullptr){
         return;
@@ -598,7 +597,11 @@ void DashboardWindow::on_problemComboBox_currentTextChanged(const QString &value
 
     }else{
 
-        contest->selectedProblem = this->contest->findProblemByName(value);
+        Problem *p = this->contest->findProblemByName(value);
+        if(p != nullptr){
+            contest->selectedProblem = *p;
+        }
+
         setupProblemDetails(ui, contest->selectedProblem);
         setupTestcaseTable(this->ui, this->contest);
     }
@@ -609,45 +612,38 @@ void DashboardWindow::on_problemComboBox_currentTextChanged(const QString &value
 
 void DashboardWindow::on_maxScoreTextField_editingFinished()
 {
+    QString name = contest->selectedProblem.name;
+    int maxScore =  ui->maxScoreTextField->text().toInt();
+    contest->selectedProblem.maxScore = maxScore;
+    this->contest->updateProblem(name, contest->selectedProblem);
 
-    if(contest->selectedProblem != nullptr){
-       QString name = contest->selectedProblem->name;
-       int maxScore =  ui->maxScoreTextField->text().toInt();
-       contest->selectedProblem->maxScore = maxScore;
-       this->contest->updateProblem(name, contest->selectedProblem);
-    }
 }
 
 void DashboardWindow::on_problemTextField_editingFinished()
 {
-    if(contest->selectedProblem != nullptr){
-       QString name = contest->selectedProblem->name;
-       int index = this->contest->findProblemIndex(name);
-       contest->selectedProblem->name = ui->problemTextField->text();
-       this->contest->updateProblem(name, contest->selectedProblem);
 
-       if(index > -1){
-           ui->problemComboBox->setItemText(index, contest->selectedProblem->name);
-       }
+    QString name = contest->selectedProblem.name;
+    int index = this->contest->findProblemIndex(name);
+    contest->selectedProblem.name = ui->problemTextField->text();
+    this->contest->updateProblem(name, contest->selectedProblem);
 
-
+    if(index > -1){
+        ui->problemComboBox->setItemText(index, contest->selectedProblem.name);
     }
+
+
 }
 
 void DashboardWindow::on_memoryLimitTextField_editingFinished()
 {
-    if(contest->selectedProblem != nullptr){
-       contest->selectedProblem->memoryLimit = ui->memoryLimitTextField->text().toInt();
-       this->contest->updateProblem(contest->selectedProblem->name, contest->selectedProblem);
-    }
+    contest->selectedProblem.memoryLimit = ui->memoryLimitTextField->text().toInt();
+    this->contest->updateProblem(contest->selectedProblem.name, contest->selectedProblem);
 }
 
 void DashboardWindow::on_descriptionTextField_textChanged()
 {
-    if(contest->selectedProblem != nullptr){
-       contest->selectedProblem->description = ui->descriptionTextField->toPlainText();
-       this->contest->updateProblem(contest->selectedProblem->name, contest->selectedProblem);
-    }
+    contest->selectedProblem.description = ui->descriptionTextField->toPlainText();
+    this->contest->updateProblem(contest->selectedProblem.name, contest->selectedProblem);
 
 }
 
@@ -656,24 +652,16 @@ void DashboardWindow::on_deleteProblemButton_clicked()
 
 
 
-    if(contest->selectedProblem == nullptr){
-        return;
-    }
-
-    if (QMessageBox::question(this, "Delete problem confirmation", "Are you sure want to delete problem: " + contest->selectedProblem->name,QMessageBox::Yes|QMessageBox::No) == QMessageBox::Yes){
+    if (QMessageBox::question(this, "Delete problem confirmation", "Are you sure want to delete problem: " + contest->selectedProblem.name,QMessageBox::Yes|QMessageBox::No) == QMessageBox::Yes){
         //
 
         if (!this->contest->deleteProblem(contest->selectedProblem)){
-            QMessageBox::warning(this, "Error", "Problem "+contest->selectedProblem->name + " could not be deleted.");
+            QMessageBox::warning(this, "Error", "Problem "+contest->selectedProblem.name + " could not be deleted.");
         }else{
 
-            if(contest->selectedProblem != nullptr){
-                setupProblemListComboBox(ui, contest);
-                contest->selectedProblem = nullptr;
-
-
-            }
-
+            setupProblemListComboBox(ui, contest);
+            Problem p;
+            contest->selectedProblem = p;
 
         }
     }
@@ -681,11 +669,9 @@ void DashboardWindow::on_deleteProblemButton_clicked()
 
 void DashboardWindow::on_timelimitTextField_editingFinished()
 {
-    if(contest->selectedProblem != nullptr){
 
-       contest->selectedProblem->timeLimit = ui->timelimitTextField->text().toInt();
-       this->contest->updateProblem(contest->selectedProblem->name, contest->selectedProblem);
-    }
+    contest->selectedProblem.timeLimit = ui->timelimitTextField->text().toInt();
+    this->contest->updateProblem(contest->selectedProblem.name, contest->selectedProblem);
 
 }
 
@@ -803,17 +789,16 @@ void DashboardWindow::on_actionNew_Contest_triggered()
 
 void DashboardWindow::on_addTestCaseBtn_clicked()
 {
-    if(this->contest->selectedProblem == nullptr){
+    if(this->contest->selectedProblem.name.isEmpty()){
         qDebug() << "No problem selected";
         return;
     }
     Test t;
     t.strength = 10;
-    t.problem = contest->selectedProblem->name;
+    t.problem = contest->selectedProblem.name;
     if (contest->addTestCase(&t)){
-       contest->selectedProblem->tests.push_back(t);
+       contest->selectedProblem.tests.push_back(t);
        setupTestcaseTable(this->ui, contest);
-
        ui->testcaseTableWidget->setCurrentCell(ui->testcaseTableWidget->rowCount() -1, 0);
        ui->testcaseTableWidget->scrollToBottom();
 
@@ -825,7 +810,11 @@ void DashboardWindow::on_addTestCaseBtn_clicked()
 void DashboardWindow::on_testcaseTableWidget_itemSelectionChanged()
 {
 
-    onSelectProblemTest(ui,contest, contest->selectedProblem->findTestByIndex(ui->testcaseTableWidget->currentRow()));
+    Test *t = contest->selectedProblem.findTestByIndex(ui->testcaseTableWidget->currentRow());
+    if(t != nullptr){
+        onSelectProblemTest(ui,contest, *t);
+    }
+
 
 }
 
@@ -837,15 +826,14 @@ void DashboardWindow::on_deleteTestCaseBtn_clicked()
 
     foreach (QModelIndex index, indexList) {
         row = index.row();
-        if(contest->selectedProblem == nullptr){
-            return;
-        }
 
-        Test *t = contest->selectedProblem->findTestByIndex(row);
+        Test *t = contest->selectedProblem.findTestByIndex(row);
         if(t != nullptr){
             this->contest->removeTest(t->id);
         }
-        contest->selectedProblem->selectedTest = nullptr;
+
+        Test tt;
+        contest->selectedProblem.selectedTest = tt;
     }
 
     if(row > -1){
@@ -869,21 +857,16 @@ void DashboardWindow::on_deleteTestCaseBtn_clicked()
 void DashboardWindow::on_testcaseTableWidget_cellChanged(int row, int column)
 {
 
-    if(contest->selectedProblem == nullptr){
-        return;
-    }
-    if(contest->selectedProblem->selectedTest == nullptr){
-        return;
-    }
+
     if(column == 0){
         int value = ui->testcaseTableWidget->item(row, column)->text().toInt();
-        if(contest->selectedProblem->tests[row].strength == value){
+        if(contest->selectedProblem.tests[row].strength == value){
             return;
         }
 
-        contest->selectedProblem->selectedTest->strength = value;
+        contest->selectedProblem.selectedTest.strength = value;
 
-        contest->saveTest(contest->selectedProblem->selectedTest);
+        contest->saveTest(contest->selectedProblem.selectedTest);
 
 
     }
@@ -893,19 +876,11 @@ void DashboardWindow::on_inputTestCaseTextField_textChanged()
 {
 
 
-    if(contest->selectedProblem == nullptr){
-        return ;
-    }
-
-    if(contest->selectedProblem->selectedTest == nullptr){
-        return;
-    }
-
     QString input = ui->inputTestCaseTextField->toPlainText();
-    contest->selectedProblem->selectedTest->input = input;
+    contest->selectedProblem.selectedTest.input = input;
 
 
-    if (!contest->updateTestInput(contest->selectedProblem->selectedTest, input)){
+    if (!contest->updateTestInput(contest->selectedProblem.selectedTest, input)){
         QMessageBox::warning(this, "Error save test case", "An error saving testcase");
     }
 }
@@ -913,17 +888,11 @@ void DashboardWindow::on_inputTestCaseTextField_textChanged()
 void DashboardWindow::on_outputTestCaseTextField_textChanged()
 {
 
-    if(contest->selectedProblem == nullptr){
-        return ;
-    }
 
-    if(contest->selectedProblem->selectedTest == nullptr){
-        return;
-    }
     QString output = ui->outputTestCaseTextField->toPlainText();
-    contest->selectedProblem->selectedTest->output = output;
+    contest->selectedProblem.selectedTest.output = output;
 
-    if (!contest->updateTestOutput(contest->selectedProblem->selectedTest,output)){
+    if (!contest->updateTestOutput(contest->selectedProblem.selectedTest,output)){
         QMessageBox::warning(this, "Error save test case", "An error saving testcase");
     }
 
@@ -957,5 +926,67 @@ void DashboardWindow::on_submissionsTableWidget_itemDoubleClicked(QTableWidgetIt
     dialog->raise();
     dialog->activateWindow();
 
+
+}
+
+void DashboardWindow::on_selectPdfpushButton_clicked()
+{
+
+    if(!contest->selectedProblem.file.isEmpty()){
+        // handle delete
+        contest->selectedProblem.file.clear();
+        if(!contest->updateProblem(contest->selectedProblem.name, contest->selectedProblem)){
+            QMessageBox::warning(this, "An error", "PDF file could not be deleted");
+        }else{
+            this->ui->pdfFileLabel->setText("");
+            this->ui->selectPdfpushButton->setText("Select PDF file");
+        }
+
+
+        return;
+    }
+    QString fileName = QFileDialog::getOpenFileName(this,
+           tr("Select PDF file"), QDir::homePath(),
+           tr("PDF (*.pdf);;All Files (*)"));
+
+       if (fileName.isEmpty())
+           return;
+       else {
+
+
+        QFile file(fileName);
+
+        if (file.open(QFile::ReadOnly)) {
+            QByteArray data = file.readAll();
+            contest->selectedProblem.file = data;
+            file.close();
+            if(!contest->updateProblem(contest->selectedProblem.name, contest->selectedProblem)){
+                QMessageBox::warning(this, "Error save problem pdf", "PDF file could not be saved");
+            }else{
+                this->ui->pdfFileLabel->setText(this->contest->selectedProblem.name + ".pdf");
+                this->ui->selectPdfpushButton->setText("Delete PDF file?");
+            }
+
+
+        }
+
+       }
+
+}
+
+void DashboardWindow::on_actionExcel_triggered()
+{
+    // export to Excel
+    QString fileName = QFileDialog::getSaveFileName(this,
+            tr("Export contest to Excel"), QDir::homePath() + "/Documents",
+            tr("Excel (*.xlsx);;All Files (*)"));
+
+
+    if(fileName.isEmpty()){
+        return;
+    }
+
+    Export e;
+    e.xls(this->contest, fileName);
 
 }
