@@ -6,6 +6,7 @@ Judge::Judge(Contest *c)
 
 }
 
+
 void Judge::run()
 {
 
@@ -22,9 +23,17 @@ void Judge::run()
                timeLimit = p.timeLimit *1000;
             }
 
-            qDebug() << "Processing submission" << s.problem << s.id << "Problem:" << p.name;
+           // qDebug() << "Processing submission" << s.problem << s.id << "Problem:" << p.name;
             // do job
-            QString dir = "/Users/toan/Desktop/ued/"+QString::number(s.userId) + "_"+QString::number(s.id);
+            QTemporaryDir tempDir;
+            if (!tempDir.isValid()) {
+                  qDebug() << "Invalid dir";
+                  break;
+            }
+
+            QString dir =  tempDir.path() + QString::number(s.userId) + "_"+QString::number(s.id);
+            qDebug() << "DDir:" << dir;
+
             if (!QDir(dir).exists()){
                 if (!QDir().mkpath(dir)){
                     qDebug() << "can not create file" << dir;
