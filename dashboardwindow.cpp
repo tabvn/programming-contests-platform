@@ -353,9 +353,12 @@ DashboardWindow::DashboardWindow(QWidget *parent, Contest *contest, Server* sThr
     });
 
 
-    contest->subscribe("error", [&](QVariant message){
+    contest->subscribe("permissionError", [&](QVariant message){
 
         qDebug() << "An error" << message;
+        this->contest->stop();
+        ui->contestlabel->setText("Permission error");
+        ui->contestButton->setText("Start");
     });
 
     contest->subscribe("onNewSubmission", [&](QVariant) {

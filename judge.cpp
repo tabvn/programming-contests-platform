@@ -31,13 +31,15 @@ void Judge::run()
                   break;
             }
 
-            QString dir =  tempDir.path() + QString::number(s.userId) + "_"+QString::number(s.id);
+            //QString dir =  tempDir.path() + QString::number(s.userId) + "_"+QString::number(s.id);
+
+            QString dir =  "/Users/_ued/" + QString::number(s.userId) + "_"+QString::number(s.id);
             qDebug() << "DDir:" << dir;
 
             if (!QDir(dir).exists()){
                 if (!QDir().mkpath(dir)){
                     qDebug() << "can not create file" << dir;
-                   // contest->publish("error", "Could not create file for compile submission.");
+                    contest->publish("permissionError", "Could not create file for compile submission.");
                     break;
                 }
             }
@@ -97,9 +99,12 @@ void Judge::run()
                             //qDebug() << "Running on test " << i;
 
                             QProcess runExec;
-                            qDebug() << runExec.processEnvironment().toStringList();
+
                             runExec.setWorkingDirectory(dir);
-                            runExec.start(programePath);
+
+                            runExec.start("sudo -u _ued " + programePath);
+
+                           // runExec.start(programePath);
 
                             if (!runExec.waitForStarted(2000)){
                                   qDebug() << "Program has not started on test " << i;
