@@ -286,6 +286,7 @@ void setupViews(Ui::DashboardWindow *ui, Contest *contest){
     ui->actionSave->setEnabled(true);
     ui->actionSave_as->setEnabled(true);
     ui->actionExcel->setEnabled(true);
+
     if(contest->filePath.isEmpty()){
          ui->actionSave->setEnabled(false);
          ui->actionSave_as->setEnabled(false);

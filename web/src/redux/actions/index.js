@@ -67,6 +67,18 @@ export const loadScoreboard = () => {
       })
     }).catch((e) => {
 
+      if (e.response && e.response.status && e.response.status === 401) {
+
+        dispatch({
+          type: SET_USER,
+          payload: null
+        })
+        service.logout()
+
+        dispatch(setMessage('Access denied'))
+
+      }
+
       dispatch(setMessage('An error loading scoreboard'))
     })
   }
@@ -82,7 +94,22 @@ export const loadProblems = () => {
         payload: res.data,
       })
     }).catch((e) => {
-      dispatch(setMessage('An error loading problems.'))
+
+      if (e.response && e.response.status && e.response.status === 401) {
+
+        dispatch({
+          type: SET_USER,
+          payload: null
+        })
+
+        service.logout()
+
+        dispatch(setMessage('Access denied'))
+
+      } else {
+        dispatch(setMessage('An error loading problems.'))
+      }
+
     })
   }
 }
@@ -109,6 +136,8 @@ export const solveProblem = (name, code) => {
             type: SET_USER,
             payload: null
           })
+          service.logout()
+
           dispatch(setMessage('Your submission could not be saved.'))
 
         } else {

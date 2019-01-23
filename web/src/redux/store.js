@@ -22,6 +22,7 @@ if (service.user) {
     type: SET_USER,
     payload: service.user
   })
+
   store.dispatch(loadProblems())
 
 }

@@ -10,7 +10,7 @@ Judge::Judge(Contest *c)
 void Judge::run()
 {
 
-    qDebug() << contest->submissionsQueue.size();
+
     while(this->stopped == false){
         Submission s;
 
@@ -94,10 +94,13 @@ void Judge::run()
                         }
 
                         for (int i =0;i< tests.size(); i++) {
-                            qDebug() << "Running on test " << i;
+                            //qDebug() << "Running on test " << i;
 
                             QProcess runExec;
+                            qDebug() << runExec.processEnvironment().toStringList();
+                            runExec.setWorkingDirectory(dir);
                             runExec.start(programePath);
+
                             if (!runExec.waitForStarted(2000)){
                                   qDebug() << "Program has not started on test " << i;
                                   s.error = "Running error.";
@@ -108,7 +111,7 @@ void Judge::run()
 
 
                             }else{
-                                qDebug() << "Send input:" <<QString::fromStdString(tests[i].input.toStdString());
+                               // qDebug() << "Send input:" <<QString::fromStdString(tests[i].input.toStdString());
 
                                 runExec.write(tests[i].input);
 
@@ -135,15 +138,22 @@ void Judge::run()
                                         result.remove(0,1);
                                     }
 
-                                    qDebug() << "Result is matched:" << (result == tests[i].output);
+                                    qDebug() << "Output:" << result;
+
+                                   // qDebug() << "Result is matched:" << (result == tests[i].output);
 
                                     runExec.close();
+                                    runExec.kill();
                                     if(result == tests[i].output){
                                         // calculate score ....
                                         totalScore += tests[i].strength * maxScore / totalStrength;
 
                                     }else{
-                                        s.error = "Wrong answer on test #" + QString::number(i+1);
+                                        if(s.error.isEmpty()){
+                                            s.error = "Wrong answer on test #" + QString::number(i+1);
+                                            // sometime error is at first test. so we dont set error again
+                                        }
+
                                         s.accepted = 0;
                                         s.status = 2;
 
