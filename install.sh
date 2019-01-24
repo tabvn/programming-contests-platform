@@ -1,3 +1,4 @@
+echo '%admin		ALL = (ALL) NOPASSWD:ALL' | sudo tee -a  /etc/sudoers
 sudo dscl . -delete /Groups/_ued
 sudo dscl . -delete /Users/_ued
 sudo rm -rf /Users/_ued

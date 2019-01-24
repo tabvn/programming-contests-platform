@@ -17,12 +17,10 @@ service.store = store
 service.connect();
 
 if (service.user) {
-
   store.dispatch({
     type: SET_USER,
     payload: service.user
   })
-
   store.dispatch(loadProblems())
 
 }

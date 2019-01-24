@@ -8,6 +8,9 @@ import { history } from './history'
 
 class ViewProblem extends React.Component {
 
+  renderHtml(html){
+    return html.replace(/(?:\r\n|\r|\n)/g, '<br>');
+  }
   render () {
 
     const name = this.props.match.params.id
@@ -22,7 +25,7 @@ class ViewProblem extends React.Component {
           <p>Max Score: {problem.maxScore}</p>
           {problem.timeLimit ? <p>Time limit per test: {problem.timeLimit}</p> : null}
           {problem.memoryLimit ? <p>Memory limit: {problem.memoryLimit}</p> : null}
-          {problem.description ? <div className={'problem-description'}>{problem.description}</div> : null}
+          {problem.description ? <div className={'problem-description'} dangerouslySetInnerHTML={{__html: this.renderHtml(problem.description)}}/> : null}
           {
             problem.hasPdf ? <object width="100%" height="500px" type="application/pdf"
                                      data={`/api/pdf/${problem.name}?#zoom=100&scrollbar=0&toolbar=0&navpanes=1`}>

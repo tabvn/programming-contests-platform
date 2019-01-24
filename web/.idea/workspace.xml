@@ -2,11 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="3b068a88-266f-447e-b145-99d46d6d56c5" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../judge.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../judge.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../install.sh" beforeDir="false" afterPath="$PROJECT_DIR$/../install.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../ued_dng.pro.user" beforeDir="false" afterPath="$PROJECT_DIR$/../ued_dng.pro.user" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/redux/actions/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/redux/actions/index.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/redux/store.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/redux/store.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/view-problem.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/view-problem.js" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -18,7 +18,41 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/view-problem.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="187">
+              <caret line="11" column="51" lean-forward="true" selection-start-line="11" selection-start-column="51" selection-end-line="11" selection-end-column="51" />
+              <folding>
+                <element signature="e#0#25#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/redux/store.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="391">
+              <caret line="23" column="22" selection-start-line="23" selection-start-column="22" selection-end-line="23" selection-end-column="22" />
+              <folding>
+                <element signature="e#0#31#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/redux/actions/index.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="431">
+              <caret line="105" selection-start-line="105" selection-end-line="105" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
@@ -57,7 +91,6 @@
         <option value="$PROJECT_DIR$/src/redux/reducers/app.js" />
         <option value="$PROJECT_DIR$/src/service.js" />
         <option value="$PROJECT_DIR$/src/redux/reducers/submission.js" />
-        <option value="$PROJECT_DIR$/src/view-problem.js" />
         <option value="$PROJECT_DIR$/src/login.js" />
         <option value="$PROJECT_DIR$/src/scoreboard.js" />
         <option value="$PROJECT_DIR$/src/problems.js" />
@@ -65,6 +98,7 @@
         <option value="$PROJECT_DIR$/src/header.js" />
         <option value="$PROJECT_DIR$/src/redux/store.js" />
         <option value="$PROJECT_DIR$/src/redux/actions/index.js" />
+        <option value="$PROJECT_DIR$/src/view-problem.js" />
       </list>
     </option>
   </component>
@@ -105,22 +139,6 @@
               <item name="build" type="462c0819:PsiDirectoryNode" />
               <item name="static" type="462c0819:PsiDirectoryNode" />
               <item name="js" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="web" type="b2602c69:ProjectViewProjectNode" />
-              <item name="web" type="462c0819:PsiDirectoryNode" />
-              <item name="public" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="web" type="b2602c69:ProjectViewProjectNode" />
-              <item name="web" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="web" type="b2602c69:ProjectViewProjectNode" />
-              <item name="web" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="redux" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -180,14 +198,16 @@
       <workItem from="1548060452787" duration="2532000" />
       <workItem from="1548238319917" duration="78000" />
       <workItem from="1548238419657" duration="537000" />
+      <workItem from="1548292957896" duration="1311000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="38237000" />
+    <option name="totallyTimeSpent" value="39548000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1680" height="982" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24954791" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -213,15 +233,6 @@
     <option name="version" value="1" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/build/static/js/runtime~main.229c360f.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" column="49" lean-forward="true" selection-start-line="1" selection-start-column="49" selection-end-line="1" selection-end-column="49" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/build/static/js/main.e93702ca.chunk.js" />
-    <entry file="file://$PROJECT_DIR$/build/static/js/main.d300d26f.chunk.js" />
     <entry file="file://$PROJECT_DIR$/build/static/js/main.e0545b58.chunk.js" />
     <entry file="file://$PROJECT_DIR$/build/static/js/main.c9bdc3bb.chunk.js" />
     <entry file="file://$PROJECT_DIR$/build/static/js/1.ff592fda.chunk.js" />
@@ -366,13 +377,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/build/static/js/main.beae8320.chunk.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="1" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/build/static/js/main.beae8320.chunk.js" />
     <entry file="file://$PROJECT_DIR$/src/header.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="310">
@@ -407,26 +412,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/view-problem.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="499">
-          <caret line="49" column="10" selection-start-line="49" selection-start-column="10" selection-end-line="49" selection-end-column="10" />
-          <folding>
-            <element signature="e#0#25#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/redux/store.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="425">
-          <caret line="25" column="25" selection-start-line="25" selection-start-column="25" selection-end-line="25" selection-end-column="25" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/service.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="224">
@@ -434,13 +419,6 @@
           <folding>
             <element signature="e#0#25#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/redux/actions/index.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="80" selection-start-line="80" selection-end-line="80" />
         </state>
       </provider>
     </entry>
@@ -455,6 +433,54 @@
       <provider selected="true" editor-type-id="text-editor">
         <state>
           <caret selection-end-line="1" selection-end-column="47" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/redux/store.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="391">
+          <caret line="23" column="22" selection-start-line="23" selection-start-column="22" selection-end-line="23" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/build/static/js/main.6aa5869e.chunk.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="1" selection-end-column="47" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/redux/actions/index.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="431">
+          <caret line="105" selection-start-line="105" selection-end-line="105" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/build/static/js/1.3a6b6220.chunk.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="1" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/build/static/js/main.13e0c8b9.chunk.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="1" selection-end-column="47" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/view-problem.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="11" column="51" lean-forward="true" selection-start-line="11" selection-start-column="51" selection-end-line="11" selection-end-column="51" />
+          <folding>
+            <element signature="e#0#25#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
