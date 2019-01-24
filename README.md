@@ -1,5 +1,5 @@
 # programming-contests-platform
-programming contests platform for teacher, students 
+Programming contests platform for teachers, students 
 
 ## Features
 * Supported for MacOS (tested on latest MacOs Movejave)
