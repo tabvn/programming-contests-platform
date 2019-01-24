@@ -10,6 +10,7 @@ programming contests platform for teacher, students
 * High security. 
 * Writen in modern c++ 
 * Mutitheading support, Queue for running testcase.
+* Video how it works https://www.youtube.com/watch?v=g4hoGh_gHtE
 
 ## How to install 
 
