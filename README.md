@@ -19,3 +19,9 @@ programming contests platform for teacher, students
 * Finally settings permisison assign read/write to your current user to folder /Users/_ued 
 * See <a href="https://firebasestorage.googleapis.com/v0/b/tabvn-fireshot.appspot.com/o/shots%2FQrC4k82w1uVqSO8ckTnvisBko7l1%2Frecording_1548296089.96139.mp4?alt=media&token=7d70fef1-9f58-4ef3-88ff-9c4ceda48b0a">video</a> screenshot how to install on Mac OS 
 
+## Versions
+
+```
+* First version released 1.0 - 24 Jan 2019
+
+```
