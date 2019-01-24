@@ -8,7 +8,7 @@ Programming contests platform for teachers, students
 * Clean App for Teacher screens, Support export contest to excel file for saved the contest later.
 * Can open exsiting contest.
 * High security. 
-* Writen in modern c++ 
+* Writen in modern c++ & Qt5 Framework
 * Mutitheading support, Queue for running testcase.
 * Video how it works https://www.youtube.com/watch?v=g4hoGh_gHtE
 
