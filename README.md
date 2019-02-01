@@ -1,4 +1,4 @@
-# programming-contests-platform
+# programming-contests-platform, Online Judge Software for MacOs.
 Programming contests platform for teachers, students 
 
 ## Features
